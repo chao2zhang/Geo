@@ -22,7 +22,7 @@ public:
     vector<Point3f> vertex;
     vector<Point2f> texture;
     vector<Triangle> surface;
-    vector<vector<int>> adjacentList;
+    vector<vector<int> > adjacentList;
     vector<string> text;
 private:
     void connect(int u, int v) {
@@ -30,7 +30,6 @@ private:
             if (adjacentList[u][i] == v)
                 return;
         adjacentList[u].push_back(v);
-        adjacentList[v].push_back(u);
     }
 public:
     void update() {
@@ -38,8 +37,11 @@ public:
         adjacentList.resize(vertex.size());
         for (int i = 0; i < surface.size(); i++) {
             connect(surface[i].vertexInd[0], surface[i].vertexInd[1]);
+            connect(surface[i].vertexInd[0], surface[i].vertexInd[2]);
+            connect(surface[i].vertexInd[1], surface[i].vertexInd[0]);
             connect(surface[i].vertexInd[1], surface[i].vertexInd[2]);
             connect(surface[i].vertexInd[2], surface[i].vertexInd[0]);
+            connect(surface[i].vertexInd[2], surface[i].vertexInd[1]);
         }
     }
     void load(istream& in) {
@@ -93,11 +95,11 @@ public:
         for (int i = 0; i < texture.size(); i++)
             out << "vt " << texture[i].x[0] << ' ' << texture[i].x[1] << endl;
         for (int i = 0; i < surface.size(); i++)
-            out << "f " << surface[i].vertexInd[0] + 1 << '/' 
+            out << "f " << surface[i].vertexInd[0] + 1 << '/'
                         << surface[i].textureInd[0] + 1 << ' '
-                        << surface[i].vertexInd[1] + 1 << '/' 
+                        << surface[i].vertexInd[1] + 1 << '/'
                         << surface[i].textureInd[1] + 1 << ' '
-                        << surface[i].vertexInd[2] + 1 << '/' 
+                        << surface[i].vertexInd[2] + 1 << '/'
                         << surface[i].textureInd[2] + 1 << endl;
     }
 };

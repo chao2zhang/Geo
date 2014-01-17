@@ -15,15 +15,15 @@ int main(int argc, char** argv) {
     t = clock();
     cout << "Loading..." << endl;
     o.load(in);
-    cout << "Loaded " << clock - t << "ms" << endl;
+    cout << "Loaded " << clock() - t << "ms" << endl;
 
     t = clock();
-    cout << "Executing laplacian HC smooth"
-    laplacian_hc_smooth(o,3);
-    cout << "Executed laplacian HC smooth " << clock - t << "ms" << endl;
-    
+    cout << "Executing laplacian HC smooth" << endl;
+    laplacian_hc_smooth(o,5);
+    cout << "Executed laplacian HC smooth " << clock() - t << "ms" << endl;
+
     t = clock();
-    cout << "Writing..."
+    cout << "Writing..." << endl;
     o.save(out);
     cout << "Writed " << clock() - t << "ms" << endl;
     in.close();
