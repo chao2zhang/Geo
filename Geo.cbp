@@ -31,6 +31,12 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="src/algorithm.cpp" />
+		<Unit filename="src/algorithm.h" />
+		<Unit filename="src/object.cpp" />
+		<Unit filename="src/object.h" />
+		<Unit filename="src/point.cpp" />
+		<Unit filename="src/point.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

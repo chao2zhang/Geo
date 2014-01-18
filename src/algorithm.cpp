@@ -31,3 +31,19 @@ void laplacian_hc_smooth(Object& obj, int times, float alpha, float beta) {
     obj.vertex.assign(p.begin(), p.end());
     obj.update();
 }
+
+void center_positioning(Object& o) {
+    Point3f u(o.vertex[0]);
+    Point3f d(o.vertex[0]);
+    for (int i = 0; i < o.vertex.size(); i++) {
+        if (o.vertex[0].x[0] > u.x[0]) u.x[0] = o.vertex[0].x[0];
+        if (o.vertex[0].x[0] < d.x[0]) d.x[0] = o.vertex[0].x[0];
+        if (o.vertex[0].x[1] > u.x[1]) u.x[1] = o.vertex[0].x[1];
+        if (o.vertex[0].x[1] < d.x[1]) d.x[1] = o.vertex[0].x[1];
+        if (o.vertex[0].x[2] > u.x[2]) u.x[2] = o.vertex[0].x[2];
+        if (o.vertex[0].x[2] < d.x[2]) d.x[2] = o.vertex[0].x[2];
+    }
+    Point3f mid = (u + d) / 2;
+    for (int i = 0; i < o.vertex.size(); i++)
+        o.vertex[i] -= mid;
+}
