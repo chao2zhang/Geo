@@ -6,8 +6,8 @@
 
 using namespace std;
 
-void Object::connect(int u, int v) {
-    for (int i = 0; i < adjacentList[u].size(); i++)
+void Object::connect(unsigned u, unsigned v) {
+    for (unsigned i = 0; i < adjacentList[u].size(); i++)
         if (adjacentList[u][i] == v)
             return;
     adjacentList[u].push_back(v);
@@ -16,22 +16,47 @@ void Object::update() {
     //Remove unused vertexes and textures
     vector<bool> useVertex(vertex.size(), false);
     vector<bool> useTexture(texture.size(), false);
-    for (int i = 0; i < face.size(); i++) {
+    for (unsigned i = 0; i < face.size(); i++) {
         useVertex[face[i].vertexInd[0]] = true;
         useVertex[face[i].vertexInd[1]] = true;
         useVertex[face[i].vertexInd[2]] = true;
-        useVertex[face[i].textureInd[0]] = true;
-        useVertex[face[i].textureInd[1]] = true;
-        useVertex[face[i].textureInd[2]] = true;
+        useTexture[face[i].textureInd[0]] = true;
+        useTexture[face[i].textureInd[1]] = true;
+        useTexture[face[i].textureInd[2]] = true;
     }
-    vector<int> vertexIndex(vertex.size());
-    vector<int> textureIndex(texture.size());
-    for (int i = 0;)
+
+    vector<unsigned> vertexIndex(vertex.size());
+    vector<Point3f> lastVertex;
+    lastVertex.swap(vertex);
+    unsigned c = 0;
+    for (unsigned i = 0; i < lastVertex.size(); i++)
+        if (useVertex[i]) {
+            vertexIndex[i] = c++;
+            vertex.push_back(lastVertex[i]);
+        }
+    vector<unsigned> textureIndex(texture.size());
+    vector<Point2f> lastTexture;
+    lastTexture.swap(texture);
+    c = 0;
+    for (unsigned i = 0; i < lastTexture.size(); i++)
+        if (useTexture[i]) {
+            textureIndex[i] = c++;
+            texture.push_back(lastTexture[i]);
+        }
+
+    for (unsigned i = 0; i < face.size(); i++) {
+        face[i].vertexInd[0] = vertexIndex[face[i].vertexInd[0]];
+        face[i].vertexInd[1] = vertexIndex[face[i].vertexInd[1]];
+        face[i].vertexInd[2] = vertexIndex[face[i].vertexInd[2]];
+        face[i].textureInd[0] = textureIndex[face[i].textureInd[0]];
+        face[i].textureInd[1] = textureIndex[face[i].textureInd[1]];
+        face[i].textureInd[2] = textureIndex[face[i].textureInd[2]];
+    }
 
     // Calculate adjacent list
     adjacentList.clear();
     adjacentList.resize(vertex.size());
-    for (int i = 0; i < face.size(); i++) {
+    for (unsigned i = 0; i < face.size(); i++) {
         connect(face[i].vertexInd[0], face[i].vertexInd[1]);
         connect(face[i].vertexInd[0], face[i].vertexInd[2]);
         connect(face[i].vertexInd[1], face[i].vertexInd[0]);
@@ -43,7 +68,7 @@ void Object::update() {
     // Calculate faces of a specific vertex
     facesOfVertex.clear();
     facesOfVertex.resize(vertex.size());
-    for (int i = 0; i < face.size(); i++) {
+    for (unsigned i = 0; i < face.size(); i++) {
         facesOfVertex[face[i].vertexInd[0]].push_back(i);
         facesOfVertex[face[i].vertexInd[1]].push_back(i);
         facesOfVertex[face[i].vertexInd[2]].push_back(i);
@@ -96,13 +121,13 @@ void Object::load(istream& in) {
 
 void Object::save(ostream& out) {
     out.setf(ios::fixed);
-    for (int i = 0; i < text.size(); i++)
+    for (unsigned i = 0; i < text.size(); i++)
         out << text[i] << endl;
-    for (int i = 0; i < vertex.size(); i++)
+    for (unsigned i = 0; i < vertex.size(); i++)
         out << "v " << vertex[i].x[0] << ' ' << vertex[i].x[1] << ' ' << vertex[i].x[2] << endl;
-    for (int i = 0; i < texture.size(); i++)
+    for (unsigned i = 0; i < texture.size(); i++)
         out << "vt " << texture[i].x[0] << ' ' << texture[i].x[1] << endl;
-    for (int i = 0; i < face.size(); i++)
+    for (unsigned i = 0; i < face.size(); i++)
         out << "f " << face[i].vertexInd[0] + 1 << '/'
                     << face[i].textureInd[0] + 1 << ' '
                     << face[i].vertexInd[1] + 1 << '/'

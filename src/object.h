@@ -13,8 +13,8 @@ using namespace std;
 
 class Triangle {
 public:
-    int vertexInd[3];
-    int textureInd[3];
+    unsigned vertexInd[3];
+    unsigned textureInd[3];
 };
 
 class Object {
@@ -22,11 +22,11 @@ public:
     vector<Point3f> vertex;
     vector<Point2f> texture;
     vector<Triangle> face;
-    vector<vector<int> > adjacentList;
-    vector<vector<int> > facesOfVertex;
+    vector<vector<unsigned> > adjacentList;
+    vector<vector<unsigned> > facesOfVertex;
     vector<string> text;
 private:
-    void connect(int u, int v);
+    void connect(unsigned u, unsigned v);
 public:
     void update();
     void load(istream& in);

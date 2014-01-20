@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
     t = clock();
     cout << "Executing laplacian HC smooth" << endl;
     laplacian_hc_smooth(o,3);
-    //center_positioning(o);
     partition_by_plane(o,1,0,0,0);
+    center_positioning(o);
     cout << "Executed laplacian HC smooth " << clock() - t << "ms" << endl;
 
     t = clock();
