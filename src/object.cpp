@@ -13,22 +13,47 @@ void Object::connect(int u, int v) {
     adjacentList[u].push_back(v);
 }
 void Object::update() {
+    //Remove unused vertexes and textures
+    vector<bool> useVertex(vertex.size(), false);
+    vector<bool> useTexture(texture.size(), false);
+    for (int i = 0; i < face.size(); i++) {
+        useVertex[face[i].vertexInd[0]] = true;
+        useVertex[face[i].vertexInd[1]] = true;
+        useVertex[face[i].vertexInd[2]] = true;
+        useVertex[face[i].textureInd[0]] = true;
+        useVertex[face[i].textureInd[1]] = true;
+        useVertex[face[i].textureInd[2]] = true;
+    }
+    vector<int> vertexIndex(vertex.size());
+    vector<int> textureIndex(texture.size());
+    for (int i = 0;)
+
+    // Calculate adjacent list
     adjacentList.clear();
     adjacentList.resize(vertex.size());
-    for (int i = 0; i < surface.size(); i++) {
-        connect(surface[i].vertexInd[0], surface[i].vertexInd[1]);
-        connect(surface[i].vertexInd[0], surface[i].vertexInd[2]);
-        connect(surface[i].vertexInd[1], surface[i].vertexInd[0]);
-        connect(surface[i].vertexInd[1], surface[i].vertexInd[2]);
-        connect(surface[i].vertexInd[2], surface[i].vertexInd[0]);
-        connect(surface[i].vertexInd[2], surface[i].vertexInd[1]);
+    for (int i = 0; i < face.size(); i++) {
+        connect(face[i].vertexInd[0], face[i].vertexInd[1]);
+        connect(face[i].vertexInd[0], face[i].vertexInd[2]);
+        connect(face[i].vertexInd[1], face[i].vertexInd[0]);
+        connect(face[i].vertexInd[1], face[i].vertexInd[2]);
+        connect(face[i].vertexInd[2], face[i].vertexInd[0]);
+        connect(face[i].vertexInd[2], face[i].vertexInd[1]);
+    }
+
+    // Calculate faces of a specific vertex
+    facesOfVertex.clear();
+    facesOfVertex.resize(vertex.size());
+    for (int i = 0; i < face.size(); i++) {
+        facesOfVertex[face[i].vertexInd[0]].push_back(i);
+        facesOfVertex[face[i].vertexInd[1]].push_back(i);
+        facesOfVertex[face[i].vertexInd[2]].push_back(i);
     }
 }
 
 void Object::load(istream& in) {
     vertex.clear();
     texture.clear();
-    surface.clear();
+    face.clear();
     text.clear();
     string line;
     char ch;
@@ -46,22 +71,22 @@ void Object::load(istream& in) {
             iss >> texture.back().x[0];
             iss >> texture.back().x[1];
         } else if (first == "f") {
-            surface.push_back(Triangle());
-            iss >> surface.back().vertexInd[0];
+            face.push_back(Triangle());
+            iss >> face.back().vertexInd[0];
             iss >> ch;
-            iss >> surface.back().textureInd[0];
-            iss >> surface.back().vertexInd[1];
+            iss >> face.back().textureInd[0];
+            iss >> face.back().vertexInd[1];
             iss >> ch;
-            iss >> surface.back().textureInd[1];
-            iss >> surface.back().vertexInd[2];
+            iss >> face.back().textureInd[1];
+            iss >> face.back().vertexInd[2];
             iss >> ch;
-            iss >> surface.back().textureInd[2];
-            surface.back().vertexInd[0]--;
-            surface.back().vertexInd[1]--;
-            surface.back().vertexInd[2]--;
-            surface.back().textureInd[0]--;
-            surface.back().textureInd[1]--;
-            surface.back().textureInd[2]--;
+            iss >> face.back().textureInd[2];
+            face.back().vertexInd[0]--;
+            face.back().vertexInd[1]--;
+            face.back().vertexInd[2]--;
+            face.back().textureInd[0]--;
+            face.back().textureInd[1]--;
+            face.back().textureInd[2]--;
         } else {
             text.push_back(line);
         }
@@ -70,17 +95,18 @@ void Object::load(istream& in) {
 }
 
 void Object::save(ostream& out) {
+    out.setf(ios::fixed);
     for (int i = 0; i < text.size(); i++)
         out << text[i] << endl;
     for (int i = 0; i < vertex.size(); i++)
         out << "v " << vertex[i].x[0] << ' ' << vertex[i].x[1] << ' ' << vertex[i].x[2] << endl;
     for (int i = 0; i < texture.size(); i++)
         out << "vt " << texture[i].x[0] << ' ' << texture[i].x[1] << endl;
-    for (int i = 0; i < surface.size(); i++)
-        out << "f " << surface[i].vertexInd[0] + 1 << '/'
-                    << surface[i].textureInd[0] + 1 << ' '
-                    << surface[i].vertexInd[1] + 1 << '/'
-                    << surface[i].textureInd[1] + 1 << ' '
-                    << surface[i].vertexInd[2] + 1 << '/'
-                    << surface[i].textureInd[2] + 1 << endl;
+    for (int i = 0; i < face.size(); i++)
+        out << "f " << face[i].vertexInd[0] + 1 << '/'
+                    << face[i].textureInd[0] + 1 << ' '
+                    << face[i].vertexInd[1] + 1 << '/'
+                    << face[i].textureInd[1] + 1 << ' '
+                    << face[i].vertexInd[2] + 1 << '/'
+                    << face[i].textureInd[2] + 1 << endl;
 }

@@ -21,8 +21,9 @@ class Object {
 public:
     vector<Point3f> vertex;
     vector<Point2f> texture;
-    vector<Triangle> surface;
+    vector<Triangle> face;
     vector<vector<int> > adjacentList;
+    vector<vector<int> > facesOfVertex;
     vector<string> text;
 private:
     void connect(int u, int v);
