@@ -1,0 +1,31 @@
+# depslib dependency file v1.0
+1390294371 source:t:\geo\src\algorithm.cpp
+	"algorithm.h"
+	<vector>
+	<queue>
+	<utility>
+
+1390293672 t:\geo\src\algorithm.h
+	"object.h"
+
+1390289637 t:\geo\src\object.h
+	<iostream>
+	<fstream>
+	<sstream>
+	<vector>
+	<string>
+	"point.h"
+
+1390272944 t:\geo\src\point.h
+	<cstring>
+	<cmath>
+
+1390289618 source:t:\geo\src\object.cpp
+	"object.h"
+	"algorithm.h"
+	<ctime>
+	<fstream>
+
+1390206716 source:t:\geo\src\point.cpp
+	"point.h"
+

@@ -13,12 +13,12 @@ using namespace std;
 
 class Triangle {
 public:
-    size_t vertexInd[3];
-    size_t textureInd[3];
-    bool hasVertex(size_t i) {
+    int vertexInd[3];
+    int textureInd[3];
+    bool hasVertex(int i) const {
         return vertexInd[0] == i || vertexInd[1] == i || vertexInd[2] == i;
     }
-    bool hasTexture(size_t i) {
+    bool hasTexture(int i) const {
         return textureInd[0] == i || textureInd[1] == i || textureInd[2] == i;
     }
 };
@@ -29,9 +29,9 @@ public:
     vector<Point2f> texture;
     vector<Point3f> faceNormal;
     vector<Triangle> face;
-    vector<vector<size_t> > adjVertex;
-    vector<vector<size_t> > facesOfVertex;
-    vector<vector<size_t> > adjFace;
+    vector<vector<int> > adjVertex;
+    vector<vector<int> > facesOfVertex;
+    vector<vector<int> > adjFace;
     vector<string> text;
 protected:
     void removeUnusedPoints();
@@ -39,8 +39,8 @@ protected:
     void calculateAdjFace();
     void calculateFacesOfVertex();
     void calculateFaceNormals();
-    void connectVertex(size_t u, size_t v);
-    void connectFace(size_t u, size_t v);
+    void connectVertex(int u, int v);
+    void connectFace(int u, int v);
 public:
     void update();
     void load(istream& in);
