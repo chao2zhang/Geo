@@ -20,9 +20,23 @@ int main(int argc, char** argv) {
     t = clock();
     cout << "Executing laplacian HC smooth" << endl;
     laplacian_hc_smooth(o,3);
-    partition_by_plane(o,1,0,0,0);
-    center_positioning(o);
     cout << "Executed laplacian HC smooth " << clock() - t << "ms" << endl;
+
+    t = clock();
+    cout << "Executing partitioning" << endl;
+    partition_by_plane(o,Plane(1, 0, 0, 0));
+    cout << "Executed partitioning " << clock() - t << "ms" << endl;
+
+    t = clock();
+    cout << "Executing positioning" << endl;
+    center_positioning(o);
+    cout << "Executed positioning " << clock() - t << "ms" << endl;
+
+
+    t = clock();
+    cout << "Executing unify normals" << endl;
+    unify_face_normals(o);
+    cout << "Executed unify normals " << clock() - t << "ms" << endl;
 
     t = clock();
     cout << "Writing..." << endl;

@@ -2,8 +2,20 @@
 #define POINT_H
 
 #include <cstring>
+#include <cmath>
 
 using namespace std;
+
+class Point3f;
+
+Point3f operator+(const Point3f& self, const Point3f& other);
+Point3f operator+(const Point3f& self, float other);
+Point3f operator-(const Point3f& self, const Point3f& other);
+Point3f operator-(const Point3f& self, float other);
+float operator*(const Point3f& self, const Point3f& other);
+Point3f operator*(const Point3f& self, float other);
+Point3f operator/(const Point3f& self, float other);
+Point3f cross(const Point3f& self, const Point3f& other);
 
 class Point3f {
 public:
@@ -59,17 +71,29 @@ public:
         x[2] /= other;
         return *this;
     }
+    float length() const {
+        return sqrt(*this * *this);
+    }
+    Point3f& normalize() {
+        float l = length();
+        x[0] /= l;
+        x[1] /= l;
+        x[2] /= l;
+        return *this;
+    }
     ~Point3f() {
     }
 };
 
-Point3f operator+(const Point3f& self, const Point3f& other);
-Point3f operator+(const Point3f& self, float other);
-Point3f operator-(const Point3f& self, const Point3f& other);
-Point3f operator-(const Point3f& self, float other);
-float operator*(const Point3f& self, const Point3f& other);
-Point3f operator*(const Point3f& self, float other);
-Point3f operator/(const Point3f& self, float other);
+class Point2f;
+
+Point2f operator+(const Point2f& self, const Point2f& other);
+Point2f operator+(const Point2f& self, float other);
+Point2f operator-(const Point2f& self, const Point2f& other);
+Point2f operator-(const Point2f& self, float other);
+float operator*(const Point2f& self, const Point2f& other);
+Point2f operator*(const Point2f& self, float other);
+Point2f operator/(const Point2f& self, float other);
 
 class Point2f {
 public:
@@ -118,16 +142,31 @@ public:
         x[1] /= other;
         return *this;
     }
+    float length() const {
+        return sqrt(*this * *this);
+    }
+    Point2f& normalize() {
+        float l = length();
+        x[0] /= l;
+        x[1] /= l;
+        return *this;
+    }
     ~Point2f() {
     }
 };
 
-Point2f operator+(const Point2f& self, const Point2f& other);
-Point2f operator+(const Point2f& self, float other);
-Point2f operator-(const Point2f& self, const Point2f& other);
-Point2f operator-(const Point2f& self, float other);
-float operator*(const Point2f& self, const Point2f& other);
-Point2f operator*(const Point2f& self, float other);
-Point2f operator/(const Point2f& self, float other);
+
+class Plane {
+public:
+    float a, b, c, d;
+    Plane(float a_, float b_, float c_, float d_) {
+        a = a_;
+        b = b_;
+        c = c_;
+        d = d_;
+    }
+    Plane():Plane(0, 0, 0, 0) {}
+};
+
 
 #endif
