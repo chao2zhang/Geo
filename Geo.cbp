@@ -12,7 +12,9 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-std=c++0x" />
 					<Add option="-g" />
+					<Add option="-Wsign-compare" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -22,6 +24,8 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-std=c++0x" />
+					<Add option="-Wsign-compare" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -36,7 +40,6 @@
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/object.cpp" />
 		<Unit filename="src/object.h" />
-		<Unit filename="src/point.cpp" />
 		<Unit filename="src/point.h" />
 		<Extensions>
 			<code_completion />

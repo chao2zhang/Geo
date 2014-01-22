@@ -13,13 +13,13 @@ using namespace std;
 
 class Triangle {
 public:
-    int vertexInd[3];
-    int textureInd[3];
-    bool hasVertex(int i) const {
-        return vertexInd[0] == i || vertexInd[1] == i || vertexInd[2] == i;
+    int vertex_index[3];
+    int texture_index[3];
+    bool has_vertex(int i) const {
+        return vertex_index[0] == i || vertex_index[1] == i || vertex_index[2] == i;
     }
-    bool hasTexture(int i) const {
-        return textureInd[0] == i || textureInd[1] == i || textureInd[2] == i;
+    bool has_texture(int i) const {
+        return texture_index[0] == i || texture_index[1] == i || texture_index[2] == i;
     }
 };
 
@@ -27,20 +27,20 @@ class Object {
 public:
     vector<Point3f> vertex;
     vector<Point2f> texture;
-    vector<Point3f> faceNormal;
+    vector<Point3f> face_normal;
     vector<Triangle> face;
-    vector<vector<int> > adjVertex;
-    vector<vector<int> > facesOfVertex;
-    vector<vector<int> > adjFace;
+    vector<vector<int> > adj_vertex;
+    vector<vector<int> > faces_of_vertex;
+    vector<vector<int> > adj_face;
     vector<string> text;
 protected:
-    void removeUnusedPoints();
-    void calculateAdjVertex();
-    void calculateAdjFace();
-    void calculateFacesOfVertex();
-    void calculateFaceNormals();
-    void connectVertex(int u, int v);
-    void connectFace(int u, int v);
+    void remove_unused_points();
+    void calculate_adj_vertex();
+    void calculate_adj_face();
+    void calculate_faces_of_vertex();
+    void calculate_face_normals();
+    void connect_vertex(int u, int v);
+    void connect_face(int u, int v);
 public:
     void update();
     void load(istream& in);

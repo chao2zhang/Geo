@@ -17,26 +17,22 @@ int main(int argc, char** argv) {
     o.load(in);
     cout << "Loaded " << clock() - t << "ms" << endl;
 
-//    count_spikes(o);
-//
-//    t = clock();
-//    cout << "Executing laplacian HC smooth" << endl;
-//    laplacian_hc_smooth(o,3);
-//    cout << "Executed laplacian HC smooth " << clock() - t << "ms" << endl;
+    count_spikes(o);
+
+    t = clock();
+    cout << "Executing laplacian HC smooth" << endl;
+    laplacian_hc_smooth(o,3);
+    cout << "Executed laplacian HC smooth " << clock() - t << "ms" << endl;
 
 //    t = clock();
 //    cout << "Executing partitioning" << endl;
 //    partition_by_plane(o,Plane(1, 0, 0, 0));
 //    cout << "Executed partitioning " << clock() - t << "ms" << endl;
 
-    count_spikes(o);
-
-//    t = clock();
-//    cout << "Executing positioning" << endl;
-//    center_positioning(o);
-//    cout << "Executed positioning " << clock() - t << "ms" << endl;
-
-    count_spikes(o);
+    t = clock();
+    cout << "Executing positioning" << endl;
+    center_positioning(o);
+    cout << "Executed positioning " << clock() - t << "ms" << endl;
 
     t = clock();
     cout << "Executing shell" << endl;

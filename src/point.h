@@ -8,16 +8,18 @@ using namespace std;
 
 class Point3f;
 
-const float eps = 0.000001;
+const float eps = 0.0001;
 
-Point3f operator+(const Point3f& self, const Point3f& other);
-Point3f operator+(const Point3f& self, float other);
-Point3f operator-(const Point3f& self, const Point3f& other);
-Point3f operator-(const Point3f& self, float other);
-float operator*(const Point3f& self, const Point3f& other);
-Point3f operator*(const Point3f& self, float other);
-Point3f operator/(const Point3f& self, float other);
-Point3f cross(const Point3f& self, const Point3f& other);
+inline Point3f operator+(const Point3f& self, const Point3f& other);
+inline Point3f operator+(float other, const Point3f& self);
+inline Point3f operator+(const Point3f& self, float other);
+inline Point3f operator-(const Point3f& self, const Point3f& other);
+inline Point3f operator-(const Point3f& self, float other);
+inline float operator*(const Point3f& self, const Point3f& other);
+inline Point3f operator*(const Point3f& self, float other);
+inline Point3f operator*(float other, const Point3f& self);
+inline Point3f operator/(const Point3f& self, float other);
+inline Point3f cross_product(const Point3f& self, const Point3f& other);
 
 class Point3f {
 public:
@@ -87,15 +89,64 @@ public:
     }
 };
 
+inline Point3f operator+(const Point3f& self, const Point3f& other) {
+    Point3f ret(self);
+    ret += other;
+    return ret;
+}
+inline Point3f operator+(const Point3f& self, float other) {
+    Point3f ret(self);
+    ret += other;
+    return ret;
+}
+inline Point3f operator+(float other, const Point3f& self) {
+    return self + other;
+}
+inline Point3f operator-(const Point3f& self, const Point3f& other) {
+    Point3f ret(self);
+    ret -= other;
+    return ret;
+}
+inline Point3f operator-(const Point3f& self, float other) {
+    Point3f ret(self);
+    ret -= other;
+    return ret;
+}
+inline float operator*(const Point3f& self, const Point3f& other) {
+    return self.x[0] * other.x[0] + self.x[1] * other.x[1] + self.x[2] * other.x[2];
+}
+inline Point3f operator*(float other, const Point3f& self) {
+    return self * other;
+}
+inline Point3f operator*(const Point3f& self, float other) {
+    Point3f ret(self);
+    ret *= other;
+    return ret;
+}
+inline Point3f operator/(const Point3f& self, float other) {
+    Point3f ret(self);
+    ret /= other;
+    return ret;
+}
+inline Point3f cross_product(const Point3f& self, const Point3f& other) {
+    Point3f ret;
+    ret.x[0] = self.x[1] * other.x[2] - self.x[2] * other.x[1];
+    ret.x[1] = self.x[2] * other.x[0] - self.x[0] * other.x[2];
+    ret.x[2] = self.x[0] * other.x[1] - self.x[1] * other.x[0];
+    return ret;
+}
+
 class Point2f;
 
-Point2f operator+(const Point2f& self, const Point2f& other);
-Point2f operator+(const Point2f& self, float other);
-Point2f operator-(const Point2f& self, const Point2f& other);
-Point2f operator-(const Point2f& self, float other);
-float operator*(const Point2f& self, const Point2f& other);
-Point2f operator*(const Point2f& self, float other);
-Point2f operator/(const Point2f& self, float other);
+inline Point2f operator+(const Point2f& self, const Point2f& other);
+inline Point2f operator+(const Point2f& self, float other);
+inline Point2f operator+(float other, const Point2f& self);
+inline Point2f operator-(const Point2f& self, const Point2f& other);
+inline Point2f operator-(const Point2f& self, float other);
+inline float operator*(const Point2f& self, const Point2f& other);
+inline Point2f operator*(const Point2f& self, float other);
+inline Point2f operator*(float other, const Point2f& self);
+inline Point2f operator/(const Point2f& self, float other);
 
 class Point2f {
 public:
@@ -157,6 +208,45 @@ public:
     }
 };
 
+inline Point2f operator+(const Point2f& self, const Point2f& other) {
+    Point2f ret(self);
+    ret += other;
+    return ret;
+}
+inline Point2f operator+(const Point2f& self, float other) {
+    Point2f ret(self);
+    ret += other;
+    return ret;
+}
+inline Point2f operator+(float other, const Point2f& self) {
+    return self + other;
+}
+inline Point2f operator-(const Point2f& self, const Point2f& other) {
+    Point2f ret(self);
+    ret -= other;
+    return ret;
+}
+inline Point2f operator-(const Point2f& self, float other) {
+    Point2f ret(self);
+    ret -= other;
+    return ret;
+}
+inline float operator*(const Point2f& self, const Point2f& other) {
+    return self.x[0] * other.x[0] + self.x[1] * other.x[1];
+}
+inline Point2f operator*(const Point2f& self, float other) {
+    Point2f ret(self);
+    ret *= other;
+    return ret;
+}
+inline Point2f operator*(float other, const Point2f& self) {
+    return self * other;
+}
+inline Point2f operator/(const Point2f& self, float other) {
+    Point2f ret(self);
+    ret /= other;
+    return ret;
+}
 
 class Plane {
 public:
