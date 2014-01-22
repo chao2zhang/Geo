@@ -5,10 +5,11 @@
 	<queue>
 	<utility>
 
-1390293672 t:\geo\src\algorithm.h
+1390363734 t:\geo\src\algorithm.h
 	"object.h"
+	"point.h"
 
-1390289637 t:\geo\src\object.h
+1390363762 t:\geo\src\object.h
 	<iostream>
 	<fstream>
 	<sstream>
@@ -16,11 +17,11 @@
 	<string>
 	"point.h"
 
-1390272944 t:\geo\src\point.h
+1390363712 t:\geo\src\point.h
 	<cstring>
 	<cmath>
 
-1390289618 source:t:\geo\src\object.cpp
+1390359414 source:t:\geo\src\object.cpp
 	"object.h"
 	"algorithm.h"
 	<ctime>
@@ -28,4 +29,10 @@
 
 1390206716 source:t:\geo\src\point.cpp
 	"point.h"
+
+1390363880 source:t:\geo\src\main.cpp
+	<ctime>
+	<iostream>
+	"algorithm.h"
+	"object.h"
 

@@ -15,8 +15,8 @@ void laplacian_hc_smooth(Object& obj, int times, float alpha, float beta) {
         for (int i = 0; i < o.size(); i++) {
             if (obj.adjVertex[i].size()) {
                 Point3f s(0, 0, 0);
-                for (int j = 0; j < obj.adjVertex[i].size(); j++)
-                    s += q[obj.adjVertex[i][j]];
+                for (int j : obj.adjVertex[i])
+                    s += q[j];
                 p[i] = s / obj.adjVertex[i].size();
             }
             b[i] = p[i] - (o[i] * alpha + q[i] * (1 - alpha));
@@ -24,8 +24,8 @@ void laplacian_hc_smooth(Object& obj, int times, float alpha, float beta) {
         for (int i = 0; i < o.size(); i++) {
             if (obj.adjVertex[i].size()) {
                 Point3f s(0, 0, 0);
-                for (int j = 0; j < obj.adjVertex[i].size(); j++)
-                    s += b[obj.adjVertex[i][j]];
+                for (int j : obj.adjVertex[i])
+                    s += b[j];
                 p[i] = p[i] - (b[i] * beta + s * (1 - beta) / obj.adjVertex[i].size());
             }
         }
@@ -211,7 +211,7 @@ void count_spikes(Object& o) {
             int x, y, a, b;
             get_shared_edge(o, i, j, x, y, a, b);
             float cos = dihedral_angle_cosin(o.vertex[x], o.vertex[y], o.vertex[a], o.vertex[b]);
-            if (cos > 0)
+            if (cos > eps)
                 spike++;
             total_pair++;
         }
@@ -227,7 +227,15 @@ void euclian_circuit(vector<pair<int, int> >& path, vector<vector<int> >& adjace
     }
 }
 
-void find_texture_with_border_edge(const Object& o, int u, int v, int& tu, int& tv) {
+inline static bool is_border_edge(const Object& o, int u, int v) {
+    unsigned count = 0;
+    for (int i = 0; i < o.facesOfVertex[u].size(); i++) {
+        count += o.face[o.facesOfVertex[u][i]].hasVertex(v);
+    }
+    return count == 1;
+}
+
+inline static void get_texture_with_border_edge(const Object& o, int u, int v, int& tu, int& tv) {
     for (int i = 0; i < o.facesOfVertex[u].size(); i++) {
         if (o.face[o.facesOfVertex[u][i]].hasVertex(v)) {
             Triangle f = o.face[o.facesOfVertex[u][i]];
@@ -244,13 +252,15 @@ void find_texture_with_border_edge(const Object& o, int u, int v, int& tu, int& 
 
 void shell(Object& o, float offset) {
     int u = o.vertex.size();
-    Point3f n;
-    for (int i = 0; i < o.face.size(); i++)
-        n += o.faceNormal[i];
-    n.normalize();
-    for (int i = 0; i < u; i++)
+    for (int i = 0; i < u; i++) {
+        Point3f n;
+        for (int j : o.facesOfVertex[i]) {
+            n += o.faceNormal[j];
+        }
+        cout << i << " " << n.x[0] << " " << n.x[1] << " " << n.x[2] << endl;
+        n.normalize();
         o.vertex.push_back(o.vertex[i] + n * offset);
-
+    }
     int f = o.face.size();
     for (int i = 0; i < f; i++) {
         Triangle t;
@@ -264,43 +274,38 @@ void shell(Object& o, float offset) {
     }
 
     // Tell which points are at the border
+    // border is only for acceleration
     vector<bool> border(u, false);
     for (int i = 0; i < u; i++)
         if (o.adjVertex[i].size() > o.facesOfVertex[i].size())
             border[i] = true;
 
-    // Store the graph of vertices at the border in adj
-    vector<vector<int> > adj(o.adjVertex);
+    // Store the graph of border edges
     for (int i = 0; i < u; i++)
         if (border[i]) {
-            vector<int> v;
-            for (int j = 0; j < adj[i].size(); j++)
-                if (border[adj[i][j]])
-                    v.push_back(adj[i][j]);
-            v.swap(adj[i]);
-        } else
-            adj[i].clear();
-    vector<pair<int, int> > path;
-    for (int i = 0; i < u; i++)
-        euclian_circuit(path, adj, i);
+            for (int j : o.adjVertex[i])
+                if (j > i && border[j] && is_border_edge(o, i, j)) {
+                    Triangle t;
+                    t.vertexInd[0] = j;
+                    t.vertexInd[1] = i;
+                    t.vertexInd[2] = i + u;
+                    get_texture_with_border_edge(o, i, j, t.textureInd[1], t.textureInd[0]);
+                    t.textureInd[2] = t.textureInd[1];
+                    o.face.push_back(t);
+                    Triangle r;
+                    r.vertexInd[0] = j;
+                    r.vertexInd[1] = i + u;
+                    r.vertexInd[2] = j + u;
+                    get_texture_with_border_edge(o, i, j, r.textureInd[1], r.textureInd[2]);
+                    r.textureInd[0] = r.textureInd[2];
+                    o.face.push_back(r);
+                }
+        }
 
-    // Add faces according to path
-    for (int i = 0; i < path.size(); i++) {
-        int v = path[i].first;
-        int w = path[i].second;
-        Triangle t;
-        t.vertexInd[0] = w;
-        t.vertexInd[1] = v;
-        t.vertexInd[2] = v + u;
-        find_texture_with_border_edge(o, v, w, t.textureInd[1], t.textureInd[0]);
-        t.textureInd[2] = t.textureInd[1];
-        o.face.push_back(t);
-        t.vertexInd[0] = w;
-        t.vertexInd[1] = v + u;
-        t.vertexInd[2] = w + u;
-        find_texture_with_border_edge(o, v, w, t.textureInd[1], t.textureInd[2]);
-        t.textureInd[0] = t.textureInd[2];
-        o.face.push_back(t);
-    }
+    // Seems euclian circuit is redundant
+    //vector<pair<int, int> > path;
+    //for (int i = 0; i < u; i++)
+    //    euclian_circuit(path, adj, i);
+
     o.update();
 }

@@ -8,6 +8,8 @@ using namespace std;
 
 class Point3f;
 
+const float eps = 0.000001;
+
 Point3f operator+(const Point3f& self, const Point3f& other);
 Point3f operator+(const Point3f& self, float other);
 Point3f operator-(const Point3f& self, const Point3f& other);

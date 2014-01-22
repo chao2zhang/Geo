@@ -125,9 +125,10 @@ void Object::calculateFacesOfVertex() {
 void Object::calculateFaceNormals() {
     faceNormal.clear();
     faceNormal.resize(face.size());
-    for (int i = 0; i < face.size(); i++)
+    for (int i = 0; i < face.size(); i++) {
         faceNormal[i] = cross(vertex[face[i].vertexInd[1]] - vertex[face[i].vertexInd[0]],
                               vertex[face[i].vertexInd[2]] - vertex[face[i].vertexInd[0]]).normalize();
+    }
 }
 void Object::update() {
     removeUnusedPoints();

@@ -1,0 +1,28 @@
+Loading...
+Loaded 1ms
+spikes: 0/10
+spikes: 0/10
+Executing shell
+0=(0,)
+0 -1 0 0
+1=(0,1,2,3,)
+1 -2 0 2
+2=(0,1,)
+2 -2 0 0
+3=(1,2,)
+3 -1 0 1
+4=(4,)
+4 1 0 0
+5=(3,4,5,)
+5 2 0 1
+6=(4,5,)
+6 2 0 0
+7=(2,3,5,)
+7 1 0 2
+Executed shell 1ms
+Executing unify normals
+16 faces reverted
+Executed unify normals 0ms
+spikes: 8/84
+Writing...
+Writed 1ms
