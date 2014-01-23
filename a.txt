@@ -1,0 +1,299 @@
+Loading...
+T:\Geo\src\object.cpp:27 remove_unused_points()
+5122 6215
+T:\Geo\src\object.cpp:41 remove_unused_points()
+T:\Geo\src\object.cpp:52 remove_unused_points()
+T:\Geo\src\object.cpp:63 remove_unused_points()
+T:\Geo\src\object.cpp:108 calculate_adj_vertex()
+T:\Geo\src\object.cpp:123 calculate_faces_of_vertex()
+T:\Geo\src\object.cpp:75 calculate_adj_face()
+T:\Geo\src\object.cpp:134 calculate_face_normals()
+Loading...384ms
+Spikes: 292/29742
+Executing laplacian HC smooth...
+T:\Geo\src\object.cpp:27 remove_unused_points()
+5122 6215
+T:\Geo\src\object.cpp:41 remove_unused_points()
+T:\Geo\src\object.cpp:52 remove_unused_points()
+T:\Geo\src\object.cpp:63 remove_unused_points()
+T:\Geo\src\object.cpp:108 calculate_adj_vertex()
+T:\Geo\src\object.cpp:123 calculate_faces_of_vertex()
+T:\Geo\src\object.cpp:75 calculate_adj_face()
+T:\Geo\src\object.cpp:134 calculate_face_normals()
+Executing laplacian HC smooth...32ms
+Executing positioning...
+Executing positioning...0ms
+Executing shell...
+Intersect: Vertex 3116 and Face 1681
+Intersect: Vertex 3123 and Face 9254
+Intersect: Vertex 3124 and Face 1406
+Intersect: Vertex 3125 and Face 1406
+Intersect: Vertex 3128 and Face 9256
+Intersect: Vertex 3155 and Face 6533
+Intersect: Vertex 3156 and Face 3893
+Intersect: Vertex 3157 and Face 1430
+Not valid: Vertex 3158
+Intersect: Vertex 3160 and Face 1424
+Not valid: Vertex 3163
+Intersect: Vertex 3209 and Face 6853
+Intersect: Vertex 3291 and Face 9069
+Intersect: Vertex 3293 and Face 6604
+Intersect: Vertex 3295 and Face 3957
+Intersect: Vertex 3297 and Face 6617
+Intersect: Vertex 3299 and Face 1499
+Intersect: Vertex 3300 and Face 6605
+Intersect: Vertex 3302 and Face 6604
+Intersect: Vertex 3303 and Face 3970
+Intersect: Vertex 3304 and Face 6619
+Intersect: Vertex 3305 and Face 6619
+Intersect: Vertex 3306 and Face 9069
+Intersect: Vertex 3307 and Face 4014
+Intersect: Vertex 3308 and Face 9073
+Not valid: Vertex 3309
+Not valid: Vertex 3310
+Intersect: Vertex 3311 and Face 3966
+Intersect: Vertex 3312 and Face 3969
+Intersect: Vertex 3313 and Face 3974
+Intersect: Vertex 3314 and Face 3969
+Not valid: Vertex 3315
+Intersect: Vertex 3317 and Face 9084
+Intersect: Vertex 3320 and Face 9081
+Intersect: Vertex 3321 and Face 9078
+Intersect: Vertex 3322 and Face 9079
+Intersect: Vertex 3323 and Face 3976
+Intersect: Vertex 3330 and Face 1518
+Intersect: Vertex 3337 and Face 3980
+Intersect: Vertex 3342 and Face 9094
+Not valid: Vertex 3343
+Intersect: Vertex 3345 and Face 9097
+Intersect: Vertex 3346 and Face 6640
+Intersect: Vertex 3347 and Face 6684
+Intersect: Vertex 3372 and Face 6738
+Intersect: Vertex 3375 and Face 4073
+Intersect: Vertex 3377 and Face 6742
+Intersect: Vertex 3392 and Face 4015
+Intersect: Vertex 3393 and Face 4017
+Not valid: Vertex 3397
+Not valid: Vertex 3406
+Not valid: Vertex 3413
+Intersect: Vertex 3414 and Face 9126
+Intersect: Vertex 3415 and Face 1552
+Intersect: Vertex 3416 and Face 1552
+Intersect: Vertex 3417 and Face 6687
+Intersect: Vertex 3418 and Face 4029
+Intersect: Vertex 3419 and Face 9131
+Intersect: Vertex 3420 and Face 9135
+Intersect: Vertex 3421 and Face 1555
+Intersect: Vertex 3422 and Face 6689
+Intersect: Vertex 3423 and Face 6639
+Intersect: Vertex 3430 and Face 6687
+Intersect: Vertex 3432 and Face 9140
+Intersect: Vertex 3433 and Face 4036
+Not valid: Vertex 3434
+Intersect: Vertex 3435 and Face 4041
+Not valid: Vertex 3440
+Not valid: Vertex 3441
+Not valid: Vertex 3442
+Not valid: Vertex 3443
+Not valid: Vertex 3444
+Not valid: Vertex 3445
+Intersect: Vertex 3446 and Face 9146
+Not valid: Vertex 3448
+Not valid: Vertex 3449
+Not valid: Vertex 3451
+Intersect: Vertex 3560 and Face 6773
+Not valid: Vertex 3564
+Intersect: Vertex 3661 and Face 4151
+Intersect: Vertex 3662 and Face 9258
+Intersect: Vertex 3663 and Face 9259
+Intersect: Vertex 3664 and Face 9255
+Intersect: Vertex 3665 and Face 9252
+Intersect: Vertex 3666 and Face 9251
+Intersect: Vertex 3667 and Face 1405
+Intersect: Vertex 3668 and Face 4150
+Intersect: Vertex 3669 and Face 6837
+Intersect: Vertex 3670 and Face 1683
+Intersect: Vertex 3671 and Face 1687
+Intersect: Vertex 3672 and Face 9268
+Intersect: Vertex 3673 and Face 9255
+Intersect: Vertex 3674 and Face 9267
+Intersect: Vertex 3675 and Face 9267
+Intersect: Vertex 3676 and Face 6842
+Intersect: Vertex 3677 and Face 1685
+Intersect: Vertex 3678 and Face 9255
+Intersect: Vertex 3679 and Face 9253
+Intersect: Vertex 3680 and Face 6835
+Intersect: Vertex 3683 and Face 9254
+Intersect: Vertex 3684 and Face 9254
+Intersect: Vertex 3685 and Face 6835
+Intersect: Vertex 3686 and Face 3893
+Intersect: Vertex 3687 and Face 9265
+Intersect: Vertex 3688 and Face 6836
+Intersect: Vertex 3689 and Face 9267
+Intersect: Vertex 3691 and Face 9266
+Intersect: Vertex 3694 and Face 9266
+Intersect: Vertex 3695 and Face 9255
+Intersect: Vertex 3706 and Face 6566
+Intersect: Vertex 3713 and Face 9267
+Intersect: Vertex 3714 and Face 9267
+Intersect: Vertex 3715 and Face 4153
+Intersect: Vertex 3893 and Face 6979
+Intersect: Vertex 3905 and Face 9388
+Intersect: Vertex 3908 and Face 1798
+Intersect: Vertex 3912 and Face 6979
+Intersect: Vertex 3913 and Face 9394
+Intersect: Vertex 3914 and Face 4251
+Intersect: Vertex 3915 and Face 9408
+Intersect: Vertex 3916 and Face 9405
+Intersect: Vertex 3917 and Face 6981
+Intersect: Vertex 3919 and Face 9393
+Intersect: Vertex 3920 and Face 1796
+Intersect: Vertex 3921 and Face 9393
+Intersect: Vertex 3922 and Face 6955
+Intersect: Vertex 3924 and Face 1796
+Intersect: Vertex 3932 and Face 1805
+Intersect: Vertex 3933 and Face 1805
+Intersect: Vertex 3948 and Face 6651
+Vertex 3116 is to be replaced by Vertex 3121
+Vertex 3123 is to be replaced by Vertex 3121
+Vertex 3124 is to be replaced by Vertex 3122
+Vertex 3125 is to be replaced by Vertex 3122
+Vertex 3128 is to be replaced by Vertex 3126
+Vertex 3155 is to be replaced by Vertex 3154
+Vertex 3156 is to be replaced by Vertex 3151
+Vertex 3157 is to be replaced by Vertex 3146
+Vertex 3158 is to be replaced by Vertex 3210
+Vertex 3160 is to be replaced by Vertex 3152
+Vertex 3163 is to be replaced by Vertex 3460
+Vertex 3209 is to be replaced by Vertex 3210
+Vertex 3291 is to be replaced by Vertex 3292
+Vertex 3293 is to be replaced by Vertex 3316
+Vertex 3295 is to be replaced by Vertex 3301
+Vertex 3297 is to be replaced by Vertex 3250
+Vertex 3299 is to be replaced by Vertex 3255
+Vertex 3300 is to be replaced by Vertex 3301
+Vertex 3302 is to be replaced by Vertex 3292
+Vertex 3303 is to be replaced by Vertex 3301
+Vertex 3304 is to be replaced by Vertex 3301
+Vertex 3305 is to be replaced by Vertex 3301
+Vertex 3306 is to be replaced by Vertex 3292
+Vertex 3307 is to be replaced by Vertex 3301
+Vertex 3308 is to be replaced by Vertex 3301
+Vertex 3309 is to be replaced by Vertex 3344
+Vertex 3310 is to be replaced by Vertex 3301
+Vertex 3311 is to be replaced by Vertex 3301
+Vertex 3312 is to be replaced by Vertex 3301
+Vertex 3313 is to be replaced by Vertex 3301
+Vertex 3314 is to be replaced by Vertex 3344
+Vertex 3315 is to be replaced by Vertex 3344
+Vertex 3317 is to be replaced by Vertex 3319
+Vertex 3320 is to be replaced by Vertex 3348
+Vertex 3321 is to be replaced by Vertex 3301
+Vertex 3322 is to be replaced by Vertex 3348
+Vertex 3323 is to be replaced by Vertex 3334
+Vertex 3330 is to be replaced by Vertex 3334
+Vertex 3337 is to be replaced by Vertex 3348
+Vertex 3342 is to be replaced by Vertex 3348
+Vertex 3343 is to be replaced by Vertex 3344
+Vertex 3345 is to be replaced by Vertex 3344
+Vertex 3346 is to be replaced by Vertex 3351
+Vertex 3347 is to be replaced by Vertex 3348
+Vertex 3372 is to be replaced by Vertex 3374
+Vertex 3375 is to be replaced by Vertex 3374
+Vertex 3377 is to be replaced by Vertex 3376
+Vertex 3392 is to be replaced by Vertex 3344
+Vertex 3393 is to be replaced by Vertex 3425
+Vertex 3397 is to be replaced by Vertex 3192
+Vertex 3406 is to be replaced by Vertex 3409
+Vertex 3413 is to be replaced by Vertex 3344
+Vertex 3414 is to be replaced by Vertex 3424
+Vertex 3415 is to be replaced by Vertex 3344
+Vertex 3416 is to be replaced by Vertex 3344
+Vertex 3417 is to be replaced by Vertex 3344
+Vertex 3418 is to be replaced by Vertex 3424
+Vertex 3419 is to be replaced by Vertex 3344
+Vertex 3420 is to be replaced by Vertex 3428
+Vertex 3421 is to be replaced by Vertex 3533
+Vertex 3422 is to be replaced by Vertex 3424
+Vertex 3423 is to be replaced by Vertex 3336
+Vertex 3430 is to be replaced by Vertex 3352
+Vertex 3432 is to be replaced by Vertex 3425
+Vertex 3433 is to be replaced by Vertex 3425
+Vertex 3434 is to be replaced by Vertex 3533
+Vertex 3435 is to be replaced by Vertex 3533
+Vertex 3440 is to be replaced by Vertex 3533
+Vertex 3441 is to be replaced by Vertex 3425
+Vertex 3442 is to be replaced by Vertex 3533
+Vertex 3443 is to be replaced by Vertex 3437
+Vertex 3444 is to be replaced by Vertex 3425
+Vertex 3445 is to be replaced by Vertex 3437
+Vertex 3446 is to be replaced by Vertex 3437
+Vertex 3448 is to be replaced by Vertex 3558
+Vertex 3449 is to be replaced by Vertex 3437
+Vertex 3451 is to be replaced by Vertex 3447
+Vertex 3560 is to be replaced by Vertex 3447
+Vertex 3564 is to be replaced by Vertex 3562
+Vertex 3661 is to be replaced by Vertex 3115
+Vertex 3662 is to be replaced by Vertex 3115
+Vertex 3663 is to be replaced by Vertex 3121
+Vertex 3664 is to be replaced by Vertex 3122
+Vertex 3665 is to be replaced by Vertex 3122
+Vertex 3666 is to be replaced by Vertex 3129
+Vertex 3667 is to be replaced by Vertex 3119
+Vertex 3668 is to be replaced by Vertex 3130
+Vertex 3669 is to be replaced by Vertex 3115
+Vertex 3670 is to be replaced by Vertex 3122
+Vertex 3671 is to be replaced by Vertex 3690
+Vertex 3672 is to be replaced by Vertex 3690
+Vertex 3673 is to be replaced by Vertex 3122
+Vertex 3674 is to be replaced by Vertex 3692
+Vertex 3675 is to be replaced by Vertex 3690
+Vertex 3676 is to be replaced by Vertex 3690
+Vertex 3677 is to be replaced by Vertex 3693
+Vertex 3678 is to be replaced by Vertex 3681
+Vertex 3679 is to be replaced by Vertex 3681
+Vertex 3680 is to be replaced by Vertex 3693
+Vertex 3683 is to be replaced by Vertex 3681
+Vertex 3684 is to be replaced by Vertex 3119
+Vertex 3685 is to be replaced by Vertex 3693
+Vertex 3686 is to be replaced by Vertex 3159
+Vertex 3687 is to be replaced by Vertex 3690
+Vertex 3688 is to be replaced by Vertex 3690
+Vertex 3689 is to be replaced by Vertex 3690
+Vertex 3691 is to be replaced by Vertex 3693
+Vertex 3694 is to be replaced by Vertex 3693
+Vertex 3695 is to be replaced by Vertex 3681
+Vertex 3706 is to be replaced by Vertex 3717
+Vertex 3713 is to be replaced by Vertex 3681
+Vertex 3714 is to be replaced by Vertex 3692
+Vertex 3715 is to be replaced by Vertex 3681
+Vertex 3893 is to be replaced by Vertex 3891
+Vertex 3905 is to be replaced by Vertex 3903
+Vertex 3908 is to be replaced by Vertex 3388
+Vertex 3912 is to be replaced by Vertex 3911
+Vertex 3913 is to be replaced by Vertex 3946
+Vertex 3914 is to be replaced by Vertex 3946
+Vertex 3915 is to be replaced by Vertex 3910
+Vertex 3916 is to be replaced by Vertex 3910
+Vertex 3917 is to be replaced by Vertex 3918
+Vertex 3919 is to be replaced by Vertex 3910
+Vertex 3920 is to be replaced by Vertex 3910
+Vertex 3921 is to be replaced by Vertex 3910
+Vertex 3922 is to be replaced by Vertex 3918
+Vertex 3924 is to be replaced by Vertex 3923
+Vertex 3932 is to be replaced by Vertex 3934
+Vertex 3933 is to be replaced by Vertex 3934
+Vertex 3948 is to be replaced by Vertex 3934
+T:\Geo\src\object.cpp:27 remove_unused_points()
+10244 6215
+T:\Geo\src\object.cpp:41 remove_unused_points()
+T:\Geo\src\object.cpp:52 remove_unused_points()
+T:\Geo\src\object.cpp:63 remove_unused_points()
+T:\Geo\src\object.cpp:108 calculate_adj_vertex()
+T:\Geo\src\object.cpp:123 calculate_faces_of_vertex()
+T:\Geo\src\object.cpp:75 calculate_adj_face()
+T:\Geo\src\object.cpp:134 calculate_face_normals()
+Executing shell...820ms
+Spikes: 3482/60818
+Writing...
+Writing...768ms

@@ -4,11 +4,11 @@
 #include <cstring>
 #include <cmath>
 
+#include "base.h"
+
 using namespace std;
 
 class Point3f;
-
-const float eps = 0.0001;
 
 inline Point3f operator+(const Point3f& self, const Point3f& other);
 inline Point3f operator+(float other, const Point3f& self);
@@ -247,18 +247,5 @@ inline Point2f operator/(const Point2f& self, float other) {
     ret /= other;
     return ret;
 }
-
-class Plane {
-public:
-    float a, b, c, d;
-    Plane(float a_, float b_, float c_, float d_) {
-        a = a_;
-        b = b_;
-        c = c_;
-        d = d_;
-    }
-    Plane():Plane(0, 0, 0, 0) {}
-};
-
 
 #endif

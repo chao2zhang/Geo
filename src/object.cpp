@@ -1,5 +1,4 @@
 #include "object.h"
-#include "algorithm.h"
 
 #include <ctime>
 #include <fstream>
@@ -25,6 +24,8 @@ void Object::connect_face(int u, int v) {
 }
 
 void Object::remove_unused_points() {
+    __LOG()
+    cout << vertex.size() << ' ' << texture.size() << endl;
     //Remove unused vertexes and textures
     vector<bool> use_vertex(vertex.size(), false);
     vector<bool> use_texture(texture.size(), false);
@@ -37,6 +38,7 @@ void Object::remove_unused_points() {
         use_texture[face[i].texture_index[2]] = true;
     }
 
+    __LOG()
     vector<int> vertex_index(vertex.size());
     vector<Point3f> last_vertex;
     last_vertex.swap(vertex);
@@ -46,27 +48,31 @@ void Object::remove_unused_points() {
             vertex_index[i] = c++;
             vertex.push_back(last_vertex[i]);
         }
-    vector<int> texture_indexex(texture.size());
+
+    __LOG()
+    vector<int> texture_index(texture.size());
     vector<Point2f> lastTexture;
     lastTexture.swap(texture);
     c = 0;
     for (int i = 0; i < lastTexture.size(); i++)
         if (use_texture[i]) {
-            texture_indexex[i] = c++;
+            texture_index[i] = c++;
             texture.push_back(lastTexture[i]);
         }
 
+    __LOG()
     for (int i = 0; i < face.size(); i++) {
         face[i].vertex_index[0] = vertex_index[face[i].vertex_index[0]];
         face[i].vertex_index[1] = vertex_index[face[i].vertex_index[1]];
         face[i].vertex_index[2] = vertex_index[face[i].vertex_index[2]];
-        face[i].texture_index[0] = texture_indexex[face[i].texture_index[0]];
-        face[i].texture_index[1] = texture_indexex[face[i].texture_index[1]];
-        face[i].texture_index[2] = texture_indexex[face[i].texture_index[2]];
+        face[i].texture_index[0] = texture_index[face[i].texture_index[0]];
+        face[i].texture_index[1] = texture_index[face[i].texture_index[1]];
+        face[i].texture_index[2] = texture_index[face[i].texture_index[2]];
     }
 }
 
 void Object::calculate_adj_face() {
+    __LOG()
     // Only called after calculate_adj_vertex() and calculate_faces_of_vertex()
     adj_face.clear();
     adj_face.resize(face.size());
@@ -99,6 +105,7 @@ void Object::calculate_adj_face() {
 }
 
 void Object::calculate_adj_vertex() {
+    __LOG()
     // Calculate adjacent list
     adj_vertex.clear();
     adj_vertex.resize(vertex.size());
@@ -113,6 +120,7 @@ void Object::calculate_adj_vertex() {
 }
 
 void Object::calculate_faces_of_vertex() {
+    __LOG()
     // Calculate faces of a specific vertex
     faces_of_vertex.clear();
     faces_of_vertex.resize(vertex.size());
@@ -123,6 +131,7 @@ void Object::calculate_faces_of_vertex() {
     }
 }
 void Object::calculate_face_normals() {
+    __LOG()
     face_normal.clear();
     face_normal.resize(face.size());
     for (int i = 0; i < face.size(); i++) {

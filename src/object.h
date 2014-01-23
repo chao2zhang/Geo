@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 
+#include "base.h"
 #include "point.h"
 
 using namespace std;
