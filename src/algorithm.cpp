@@ -122,11 +122,7 @@ inline static void get_shared_edge(const Object& o, int f, int g, int& u, int& v
         rg = o.face[g].vertex_index[2];
 }
 
-/*
- * f is the face with correct normal orientation,
- * while g is the face with possibly wrong normal orientation.
- */
-inline static bool correct_winding(Object& o, int f, int g) {
+inline static bool is_correct_winding(Object& o, int f, int g) {
     int x, y, rf, rg;
     get_shared_edge(o, f, g, x, y, rf, rg);
     int fx = 0, fy = 0, gx = 0, gy = 0;
@@ -135,11 +131,17 @@ inline static bool correct_winding(Object& o, int f, int g) {
     while (o.face[g].vertex_index[gx] != x) gx++;
     while (o.face[g].vertex_index[gy] != y) gy++;
 
-    if ((fx + 1 == fy || fx - 2 == fy) == (gx + 1 == gy || gx - 2 == gy)) {
+    return (fx + 1 == fy || fx - 2 == fy) == (gx + 1 == gy || gx - 2 == gy);
+}
+/*
+ * f is the face with correct normal orientation,
+ * while g is the face with possibly wrong normal orientation.
+ */
+inline static bool correct_winding(Object& o, int f, int g) {
+    bool answer = is_correct_winding(o, f, g);
+    if (answer)
         reverse_face_orientation(o, g);
-        return true;
-    }
-    return false;
+    return answer;
 }
 
 inline static bool is_border_edge(const Object& o, int u, int v) {
@@ -168,20 +170,36 @@ inline static void get_texture_with_border_edge(const Object& o, int u, int v, i
 /*
  * If the orientation of a vertex normal is inconsistent with all face normals, the normal is not valid.
  */
-inline static bool is_vertex_normal_valid(const Object& o, const Point3f& n, int v) {
-    for (int i : o.faces_of_vertex[v])
-        if (n * o.face_normal[i] < eps)
+inline static bool is_vertex_normal_valid(const Object& o, int v) {
+    for (int f : o.faces_of_vertex[v])
+        if (o.vertex_normal[v] * o.face_normal[f] < eps)
             return false;
     return true;
 }
 
 /*
- *
+ * If any vertex appears at least twice in the triangle, it is actually a degenerate triangle
  */
-inline static bool is_triangle_face_valid(const Triangle& t) {
-    return !(t.vertex_index[0] == t.vertex_index[1]
-          || t.vertex_index[1] == t.vertex_index[2]
-          || t.vertex_index[2] == t.vertex_index[0]);
+inline static bool is_degenerate_triangle(const Triangle& t) {
+    return (t.vertex_index[0] == t.vertex_index[1]
+         || t.vertex_index[1] == t.vertex_index[2]
+         || t.vertex_index[2] == t.vertex_index[0]);
+}
+
+/*
+ * If two triangle share a vertex, they should not be considered in self-intersection
+ */
+inline static bool is_triangle_overlap(const Triangle& t, const Triangle& s) {
+    return (t.vertex_index[0] == s.vertex_index[0]
+         || t.vertex_index[0] == s.vertex_index[1]
+         || t.vertex_index[0] == s.vertex_index[2]
+         || t.vertex_index[1] == s.vertex_index[0]
+         || t.vertex_index[1] == s.vertex_index[1]
+         || t.vertex_index[1] == s.vertex_index[2]
+         || t.vertex_index[2] == s.vertex_index[0]
+         || t.vertex_index[2] == s.vertex_index[1]
+         || t.vertex_index[2] == s.vertex_index[2]
+            );
 }
 
 void laplacian_hc_smooth(Object& obj, int times, float alpha, float beta) {
@@ -310,20 +328,47 @@ void partition_by_plane(Object& o, const Plane& p) {
     }
     o.update();
 }
-
-void count_spikes(Object& o) {
-    // A pair of adjacent triangles with dihedral angle smaller than 90 deg is regarded as a spike
-    unsigned spike = 0, total_pair = 0;
+/*
+ * A pair of adjacent triangles with dot product of their normals
+ * smaller than threshold is regarded as spike.
+ */
+void count_spike(Object& o, float dot_product) {
+    unsigned spike = 0, total = 0;
     for (int i = 0; i < o.face.size(); i++)
         for (int j : o.adj_face[i]) {
+            if (j <= i)
+                continue;
             int x, y, ri, rj;
             get_shared_edge(o, i, j, x, y, ri, rj);
-            float cos = dihedral_angle_cosin(o.vertex[x], o.vertex[y], o.vertex[ri], o.vertex[rj]);
-            if (cos > eps)
+            float cos = o.face_normal[i] * o.face_normal[j];
+            if (is_correct_winding(o, i, j))
+                cos *= -1;
+            if (cos < dot_product - eps)
                 spike++;
-            total_pair++;
+            total++;
         }
-    cout << "Spikes: " << spike << '/' << total_pair << endl;
+    cout << "Detect " << spike << '/' << total << " spikes" << endl;
+}
+
+void clear_spike(Object& o, float dot_product, vector<bool>& invalid) {
+    unsigned spike = 0, total = 0;
+    for (int i = 0; i < o.face.size(); i++)
+        for (int j : o.adj_face[i]) {
+            if (j <= i)
+                continue;
+            int x, y, ri, rj;
+            get_shared_edge(o, i, j, x, y, ri, rj);
+            float cos = o.face_normal[i] * o.face_normal[j];
+            if (is_correct_winding(o, i, j))
+                cos *= -1;
+            if (cos < dot_product - eps) {
+                spike++;
+                invalid[i] = true;
+                invalid[j] = true;
+            }
+            total++;
+        }
+    cout << "Clear " << spike << '/' << total << " spikes" << endl;
 }
 
 void euclian_circuit(vector<pair<int, int> >& path, vector<vector<int> >& adjacent_graph, int i) {
@@ -335,87 +380,70 @@ void euclian_circuit(vector<pair<int, int> >& path, vector<vector<int> >& adjace
     }
 }
 
+void gen_offset_vertex(const Object& o, float offset, Object& m) {
+    m.vertex.clear();
+    m.vertex.resize(o.vertex.size());
+    for (int i = 0; i < o.vertex.size(); i++)
+        m.vertex[i] = o.vertex[i] + o.vertex_normal[i] * offset;
+}
 
-void shell(Object& o, float offset) {
-    int u = o.vertex.size();
-    int f = o.face.size();
-
-    // Mark Vertex I+U to remove it in the future if Line I->I+U intersects with any face.
-    // If to_remove[i] == true, Vertex i+u is to be removed.
-    vector<bool> to_remove(u, false);
-    for (int i = 0; i < u; i++) {
-        Point3f n;
-        for (int j : o.faces_of_vertex[i])
-            n += o.face_normal[j];
-        n.normalize();
-        Point3f m = o.vertex[i] + n * offset;
-        if (is_vertex_normal_valid(o, n, i)) {
-            for (int j = 0; j < f; j++) {
-                if (is_intersect(o, m, o.vertex[i], j) && !o.face[j].has_vertex(i)) {
-                    cout << "Intersect: Vertex " << i << " and Face " << j << endl;
-                    to_remove[i] = true;
-                    break;
-                }
-            }
-        } else {
-            cout << "Not valid: Vertex " << i << endl;
-            to_remove[i] = true;
+void gen_offset_invalid_vertex(const Object& o, const Object& m, vector<bool>& invalid) {
+    // Mark Vertex i_m as invalid if Line (i_m, i_o) intersects with any face.
+    for (int i = 0; i < o.vertex.size(); i++) {
+        if (!is_vertex_normal_valid(o, i)) {
+            cout << "Invalid: Vertex " << i << endl;
+            invalid[i] = true;
+            continue;
         }
-        o.vertex.push_back(m);
+        for (int j = 0; j < o.face.size(); j++)
+            if (is_intersect(o, m.vertex[i], o.vertex[i], j) && !o.face[j].has_vertex(i)) {
+                cout << "Intersect: Vertex " << i << " and Face " << j << endl;
+                invalid[i] = true;
+                break;
+            }
     }
+}
 
-    // For each vertex to remove, find the vertex with the shortest path length to replace it.
-    // Use breadth-first-search to determine to substitute vertex.
-    vector<int> replace_vertex(u, 0);
-    vector<int> q;
-    vector<bool> visited(u, false);
-    int pos;
-    bool found_replace_vertex;
-    for (int i = 0; i < u; i++)
-        if (to_remove[i]) {
-            pos = 0;
-            found_replace_vertex = false;
-            q.push_back(i);
-            visited[i] = true;
-            while (pos < q.size() && !found_replace_vertex) {
-                int cur = q[pos];
-                pos++;
-                for (int next : o.adj_vertex[cur])
-                    if (to_remove[next]) {
-                        if (!visited[next]) {
-                            visited[next] = true;
-                            q.push_back(next);
-                        }
-                    } else {
-                        replace_vertex[i] = next;
-                        cout << "Vertex " << i << " is to be replaced by Vertex " << next << endl;
-                        found_replace_vertex = true;
-                        break;
-                    }
-            }
-            while (!q.empty()) {
-                visited[q.back()] = false;
-                q.pop_back();
-            }
-        } else
-            replace_vertex[i] = i;
-
-    for (int i = 0; i < f; i++) {
+void gen_offset_face(const Object& o, Object& m, const vector<bool>& invalid) {
+    for (int i = 0; i < o.face.size(); i++) {
         const Triangle& face = o.face[i];
+        if (invalid[face.vertex_index[0]] ||
+            invalid[face.vertex_index[1]] ||
+            invalid[face.vertex_index[2]])
+            continue;
         Triangle t;
-        t.vertex_index[0] = replace_vertex[face.vertex_index[1]] + u;
-        t.vertex_index[1] = replace_vertex[face.vertex_index[0]] + u;
-        t.vertex_index[2] = replace_vertex[face.vertex_index[2]] + u;
+        t.vertex_index[0] = face.vertex_index[1];
+        t.vertex_index[1] = face.vertex_index[0];
+        t.vertex_index[2] = face.vertex_index[2];
+        // If the offset face is flipped, they should be rejected.
+        Point3f n = cross_product(o.vertex[t.vertex_index[1]] - o.vertex[t.vertex_index[0]],
+                                  o.vertex[t.vertex_index[2]] - o.vertex[t.vertex_index[0]]).normalize();
+        if (n * o.face_normal[i] > -eps)
+            continue;
         t.texture_index[0] = face.texture_index[1];
         t.texture_index[1] = face.texture_index[0];
         t.texture_index[2] = face.texture_index[2];
-        if (is_triangle_face_valid(t))
-            o.face.push_back(t);
+        m.face.push_back(t);
     }
+}
 
+template <typename T>
+void append_vector(vector<T>& v, const vector<T>& w) {
+    v.reserve(v.size() + w.size());
+    v.insert(v.end(), w.begin(), w.end());
+}
 
+void enclose_offset_mesh(Object& o, Object& m, const vector<bool>& invalid) {
     // Tell which points are at the border,
     // and link new vertices along the border
+    int u = o.vertex.size();
+    append_vector(o.vertex, m.vertex);
+    for (Triangle& f : m.face) {
+        f.vertex_index[0] += u;
+        f.vertex_index[1] += u;
+        f.vertex_index[2] += u;
+    }
+    append_vector(o.face, m.face);
     vector<bool> border(u, false);
     for (int i = 0; i < u; i++)
         if (o.adj_vertex[i].size() > o.faces_of_vertex[i].size())
@@ -424,29 +452,106 @@ void shell(Object& o, float offset) {
         if (border[i]) {
             for (int j : o.adj_vertex[i])
                 if (j > i && border[j] && is_border_edge(o, i, j)) {
+                    if (invalid[i] || invalid[j])
+                        continue;
                     Triangle t;
                     t.vertex_index[0] = j;
                     t.vertex_index[1] = i;
                     t.vertex_index[2] = i + u;
                     get_texture_with_border_edge(o, i, j, t.texture_index[1], t.texture_index[0]);
                     t.texture_index[2] = t.texture_index[1];
-                    if (is_triangle_face_valid(t))
-                        o.face.push_back(t);
+                    o.face.push_back(t);
 
                     t.vertex_index[0] = j;
                     t.vertex_index[1] = i + u;
                     t.vertex_index[2] = j + u;
                     get_texture_with_border_edge(o, i, j, t.texture_index[1], t.texture_index[2]);
                     t.texture_index[0] = t.texture_index[2];
-                    if (is_triangle_face_valid(t))
-                        o.face.push_back(t);
+                    o.face.push_back(t);
                 }
         }
+}
 
-    // Seems euclian circuit is redundant
-    //vector<pair<int, int> > path;
-    //for (int i = 0; i < u; i++)
-    //    euclian_circuit(path, adj, i);
+void detect_self_intersect(const Object& o, vector<bool>& intersect) {
+    for (int i = 0; i < o.face.size(); i++)
+        for (int j = 0; j < o.face.size(); j++)
+            if (!intersect[j] && !is_triangle_overlap(o.face[i], o.face[j])) {
+                if (is_intersect(o, o.vertex[o.face[j].vertex_index[0]], o.vertex[o.face[j].vertex_index[1]], i)
+                 || is_intersect(o, o.vertex[o.face[j].vertex_index[1]], o.vertex[o.face[j].vertex_index[2]], i)
+                 || is_intersect(o, o.vertex[o.face[j].vertex_index[2]], o.vertex[o.face[j].vertex_index[0]], i)) {
+                    intersect[i] = true;
+                    intersect[j] = true;
+                    break;
+                 }
+            }
+}
 
+int flood_fill_face_group(const Object& o, const vector<bool>& invalid, vector<int>& face_group) {
+    int cur_group = 0;
+    int max_group = 0;
+    int max_group_count = 0;
+    for (int i = 0; i < o.face.size(); i++) {
+        if (face_group[i] || invalid[i])
+            continue;
+        ++cur_group;
+        face_group[i] = cur_group;
+        vector<int> q;
+        q.push_back(i);
+        int cur_pos = 0;
+        while (cur_pos < q.size()) {
+            int cur_face = q[cur_pos];
+            for (int f : o.adj_face[cur_face])
+                if (face_group[f] == 0 && !invalid[f]) {
+                    q.push_back(f);
+                    face_group[f] = cur_group;
+                }
+            cur_pos++;
+        }
+        cout << "Group " << cur_group << " Number " << q.size() << endl;
+        if (q.size() > max_group_count) {
+            max_group_count = q.size();
+            max_group = cur_group;
+        }
+    }
+    cout << "Total groups " << cur_group - 1 << endl;
+    return max_group;
+}
+
+void slice_group(Object& o, const vector<int>& face_group, int group) {
+    vector<Triangle> face;
+    face.swap(o.face);
+    for (int i = 0; i < face.size(); i++)
+        if (face_group[i] == group)
+            o.face.push_back(face[i]);
+}
+
+void fill_trivial_hole(Object& o, float threshold=0.01) {
+}
+
+void mesh_offset(Object& o, float offset) {
+    Object m;
+    vector<bool> vertex_invalid(o.vertex.size(), false);
+    gen_offset_vertex(o, offset, m);
+    m.texture = o.texture;
+    gen_offset_invalid_vertex(o, m, vertex_invalid);
+    gen_offset_face(o, m, vertex_invalid);
+    m.update(false);
+
+    vector<bool> face_invalid(m.face.size(), false);
+    detect_self_intersect(m, face_invalid);
+
+    vector<int> face_group(m.face.size(), 0);
+    clear_spike(m, -0.2588, face_invalid);
+    int max_group = flood_fill_face_group(m, face_invalid, face_group);
+    cout << "Choose Group " << max_group << endl;
+    slice_group(m, face_group, max_group);
+    o.vertex = m.vertex;
+    o.texture = m.texture;
+    o.face = m.face;
+//
+//    fill_trivial_hole(m);
+//
+//    enclose_offset_mesh(o, m, invalid);
     o.update();
+    laplacian_hc_smooth(o,3);
 }

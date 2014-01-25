@@ -37,9 +37,11 @@
 		</Compiler>
 		<Unit filename="src/algorithm.cpp" />
 		<Unit filename="src/algorithm.h" />
+		<Unit filename="src/base.h" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/object.cpp" />
 		<Unit filename="src/object.h" />
+		<Unit filename="src/plane.h" />
 		<Unit filename="src/point.h" />
 		<Extensions>
 			<code_completion />

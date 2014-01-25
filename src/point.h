@@ -80,6 +80,8 @@ public:
     }
     Point3f& normalize() {
         float l = length();
+        if (l == 0.0f)
+            return *this;
         x[0] /= l;
         x[1] /= l;
         x[2] /= l;
@@ -200,6 +202,8 @@ public:
     }
     Point2f& normalize() {
         float l = length();
+        if (l == 0.0f)
+            return *this;
         x[0] /= l;
         x[1] /= l;
         return *this;

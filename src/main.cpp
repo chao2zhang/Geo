@@ -20,10 +20,10 @@ int main(int argc, char** argv) {
     o.load(in);
     END_TIME("Loading...");
 
-    count_spikes(o);
+    count_spike(o);
 
     START_TIME("Executing laplacian HC smooth...")
-    laplacian_hc_smooth(o,3);
+    laplacian_hc_smooth(o,5);
     END_TIME("Executing laplacian HC smooth...")
 
 //    START_TIME("Executing partitioning")
@@ -35,14 +35,14 @@ int main(int argc, char** argv) {
     END_TIME("Executing positioning...")
 
     START_TIME("Executing shell...")
-    shell(o, -0.1);
+    mesh_offset(o, -0.1);
     END_TIME("Executing shell...")
 
-//    START_TIME("Executing unify normals...")
-//    unify_face_normals(o);
-//    END_TIME("Executing unify normals...")
+    START_TIME("Executing unify normals...")
+    unify_face_normals(o);
+    END_TIME("Executing unify normals...")
 
-    count_spikes(o);
+    count_spike(o);
 
     START_TIME("Writing...")
     o.save(out);

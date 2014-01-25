@@ -28,22 +28,26 @@ class Object {
 public:
     vector<Point3f> vertex;
     vector<Point2f> texture;
-    vector<Point3f> face_normal;
     vector<Triangle> face;
+    vector<string> text;
+public:
+    vector<Point3f> face_normal;
+    vector<Point3f> vertex_normal;
     vector<vector<int> > adj_vertex;
     vector<vector<int> > faces_of_vertex;
     vector<vector<int> > adj_face;
-    vector<string> text;
 protected:
-    void remove_unused_points();
+    void remove_unused_vertex();
+    void remove_unused_texture();
     void calculate_adj_vertex();
     void calculate_adj_face();
     void calculate_faces_of_vertex();
-    void calculate_face_normals();
+    void calculate_face_normal();
+    void calculate_vertex_normal();
     void connect_vertex(int u, int v);
     void connect_face(int u, int v);
 public:
-    void update();
+    void update(bool clean=true);
     void load(istream& in);
     void save(ostream& out);
 };

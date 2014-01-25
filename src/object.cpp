@@ -23,48 +23,49 @@ void Object::connect_face(int u, int v) {
     adj_face[u].push_back(v);
 }
 
-void Object::remove_unused_points() {
+void Object::remove_unused_vertex() {
     __LOG()
-    cout << vertex.size() << ' ' << texture.size() << endl;
-    //Remove unused vertexes and textures
     vector<bool> use_vertex(vertex.size(), false);
-    vector<bool> use_texture(texture.size(), false);
+    vector<int> vertex_index(vertex.size());
     for (int i = 0; i < face.size(); i++) {
         use_vertex[face[i].vertex_index[0]] = true;
         use_vertex[face[i].vertex_index[1]] = true;
         use_vertex[face[i].vertex_index[2]] = true;
-        use_texture[face[i].texture_index[0]] = true;
-        use_texture[face[i].texture_index[1]] = true;
-        use_texture[face[i].texture_index[2]] = true;
     }
-
-    __LOG()
-    vector<int> vertex_index(vertex.size());
     vector<Point3f> last_vertex;
     last_vertex.swap(vertex);
     int c = 0;
-    for (int i = 0; i < last_vertex.size(); i++)
+    for (int i = 0; i < last_vertex.size(); i++) {
         if (use_vertex[i]) {
             vertex_index[i] = c++;
             vertex.push_back(last_vertex[i]);
         }
-
-    __LOG()
-    vector<int> texture_index(texture.size());
-    vector<Point2f> lastTexture;
-    lastTexture.swap(texture);
-    c = 0;
-    for (int i = 0; i < lastTexture.size(); i++)
-        if (use_texture[i]) {
-            texture_index[i] = c++;
-            texture.push_back(lastTexture[i]);
-        }
-
-    __LOG()
+    }
     for (int i = 0; i < face.size(); i++) {
         face[i].vertex_index[0] = vertex_index[face[i].vertex_index[0]];
         face[i].vertex_index[1] = vertex_index[face[i].vertex_index[1]];
         face[i].vertex_index[2] = vertex_index[face[i].vertex_index[2]];
+    }
+}
+
+void Object::remove_unused_texture() {
+    __LOG()
+    vector<bool> use_texture(texture.size(), false);
+    vector<int> texture_index(texture.size());
+    for (int i = 0; i < face.size(); i++) {
+        use_texture[face[i].texture_index[0]] = true;
+        use_texture[face[i].texture_index[1]] = true;
+        use_texture[face[i].texture_index[2]] = true;
+    }
+    vector<Point2f> last_texture;
+    last_texture.swap(texture);
+    int c = 0;
+    for (int i = 0; i < last_texture.size(); i++)
+        if (use_texture[i]) {
+            texture_index[i] = c++;
+            texture.push_back(last_texture[i]);
+        }
+    for (int i = 0; i < face.size(); i++) {
         face[i].texture_index[0] = texture_index[face[i].texture_index[0]];
         face[i].texture_index[1] = texture_index[face[i].texture_index[1]];
         face[i].texture_index[2] = texture_index[face[i].texture_index[2]];
@@ -74,34 +75,22 @@ void Object::remove_unused_points() {
 void Object::calculate_adj_face() {
     __LOG()
     // Only called after calculate_adj_vertex() and calculate_faces_of_vertex()
+    #define conn_adj_face(a, b)\
+        for (int j : faces_of_vertex[a])\
+            for (int k : faces_of_vertex[b])\
+                if (j == k) {\
+                    connect_face(i, j);\
+                    connect_face(j, i);\
+                    break;\
+                }
     adj_face.clear();
     adj_face.resize(face.size());
     for (int i = 0; i < face.size(); i++) {
-        int u = face[i].vertex_index[0];
-        int v = face[i].vertex_index[1];
-        int w = face[i].vertex_index[2];
-        for (int j : faces_of_vertex[u])
-            for (int k : faces_of_vertex[v])
-                if (j == k) {
-                    connect_face(i, j);
-                    connect_face(j, i);
-                    break;
-                }
-        for (int j : faces_of_vertex[v])
-            for (int k : faces_of_vertex[w])
-                if (j == k) {
-                    connect_face(i, j);
-                    connect_face(j, i);
-                    break;
-                }
-        for (int j : faces_of_vertex[w])
-            for (int k : faces_of_vertex[u])
-                if (j == k) {
-                    connect_face(i, j);
-                    connect_face(j, i);
-                    break;
-                }
+        conn_adj_face(face[i].vertex_index[0], face[i].vertex_index[1]);
+        conn_adj_face(face[i].vertex_index[1], face[i].vertex_index[2]);
+        conn_adj_face(face[i].vertex_index[2], face[i].vertex_index[0]);
     }
+    #undef conn_adj_face
 }
 
 void Object::calculate_adj_vertex() {
@@ -130,7 +119,7 @@ void Object::calculate_faces_of_vertex() {
         faces_of_vertex[face[i].vertex_index[2]].push_back(i);
     }
 }
-void Object::calculate_face_normals() {
+void Object::calculate_face_normal() {
     __LOG()
     face_normal.clear();
     face_normal.resize(face.size());
@@ -139,12 +128,28 @@ void Object::calculate_face_normals() {
                               vertex[face[i].vertex_index[2]] - vertex[face[i].vertex_index[0]]).normalize();
     }
 }
-void Object::update() {
-    remove_unused_points();
+
+void Object::calculate_vertex_normal() {
+    __LOG()
+    vertex_normal.clear();
+    vertex_normal.resize(vertex.size());
+    for (int i = 0; i < vertex.size(); i++) {
+        for (int j : faces_of_vertex[i])
+            vertex_normal[i] += face_normal[j];
+        vertex_normal[i].normalize();
+    }
+}
+
+void Object::update(bool clean) {
+    if (clean) {
+        remove_unused_vertex();
+        remove_unused_texture();
+    }
     calculate_adj_vertex();
     calculate_faces_of_vertex();
     calculate_adj_face();
-    calculate_face_normals();
+    calculate_face_normal();
+    calculate_vertex_normal();
 }
 
 void Object::load(istream& in) {
