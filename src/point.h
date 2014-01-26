@@ -6,8 +6,6 @@
 
 #include "base.h"
 
-using namespace std;
-
 class Point3f;
 
 inline Point3f operator+(const Point3f& self, const Point3f& other);
@@ -77,6 +75,9 @@ public:
     }
     float length() const {
         return sqrt(*this * *this);
+    }
+    float length_square() const {
+        return *this * *this;
     }
     Point3f& normalize() {
         float l = length();
@@ -199,6 +200,9 @@ public:
     }
     float length() const {
         return sqrt(*this * *this);
+    }
+    float length_square() const {
+        return *this * *this;
     }
     Point2f& normalize() {
         float l = length();

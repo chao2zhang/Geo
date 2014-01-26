@@ -4,7 +4,10 @@
 #include "algorithm.h"
 #include "object.h"
 
-using namespace std;
+using std::ifstream;
+using std::ofstream;
+using std::cout;
+using std::endl;
 
 clock_t t;
 #define START_TIME(s) t = clock(); cout << s << endl;
