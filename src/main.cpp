@@ -23,29 +23,33 @@ int main(int argc, char** argv) {
     o.load(in);
     END_TIME("Loading...");
 
+    START_TIME("Counting spikes...")
     count_spike(o);
+    END_TIME("Counting spikes...");
 
-    START_TIME("Executing laplacian HC smooth...")
-    laplacian_hc_smooth(o,5);
-    END_TIME("Executing laplacian HC smooth...")
-
-//    START_TIME("Executing partitioning")
-//    partition_by_plane(o,Plane(1, 0, 0, 0));
-//    END_TIME()
+//    START_TIME("Executing laplacian HC smooth...")
+//    laplacian_hc_smooth(o,5);
+//    END_TIME("Executing laplacian HC smooth...")
 
     START_TIME("Executing positioning...")
-    center_positioning(o);
+    center_positioning_by_averaging_vertex(o);
     END_TIME("Executing positioning...")
 
-    START_TIME("Executing shell...")
-    mesh_offset(o, -0.1);
-    END_TIME("Executing shell...")
+//    START_TIME("Executing shell...")
+//    mesh_offset(o, -0.05);
+//    END_TIME("Executing shell...")
+
+    START_TIME("Executing partitioning...")
+    partition_by_plane(o, Plane(0.586, 0.980, -0.993, 1));
+    END_TIME("Executing partitioning..")
+
+    START_TIME("Executing projecting...")
+    project_by_plane(o, Plane(0.586, 0.980, -0.993, 1.1));
+    END_TIME("Executing projecting...")
 
     START_TIME("Executing unify normals...")
     unify_face_normals(o);
     END_TIME("Executing unify normals...")
-
-    count_spike(o);
 
     START_TIME("Writing...")
     o.save(out);

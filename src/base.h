@@ -3,10 +3,10 @@
 
 const float eps = 0.0001;
 
-#define LOGGABLE
+#define DEBUGGABLE
 
-#ifdef LOGGABLE
-#define __LOG() cerr << __FILE__ << ':' << __LINE__ << ' ' << __func__ << "()" << endl;
-#endif // LOGGABLE
+#ifdef DEBUGGABLE
+#define DEBUG() cerr << __FILE__ << ':' << __LINE__ << ' ' << __func__ << "()" << endl;
+#endif // DEBUGGABLE
 
 #endif // BASE_H
