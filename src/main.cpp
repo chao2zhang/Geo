@@ -43,6 +43,11 @@ int main(int argc, char** argv) {
     partition_by_plane(o, Plane(0.586, 0.980, -0.993, 1));
     END_TIME("Executing partitioning..")
 
+    START_TIME("Executing partitioning...")
+    partition_by_plane(o, Plane(0.837, -0.234, 0.456, -0.8));
+    END_TIME("Executing partitioning..")
+
+
     START_TIME("Executing projecting...")
     project_by_plane(o, Plane(0.586, 0.980, -0.993, 1.1));
     END_TIME("Executing projecting...")
