@@ -4,6 +4,7 @@
 #include <list>
 #include <queue>
 #include <utility>
+#include <cmath>
 
 using std::vector;
 using std::list;
@@ -52,7 +53,7 @@ inline static Point3f get_intersect_point(const Point3f& x, const Point3f& y, co
     return ret;
 }
 
-inline static float get_value_on_line(const Point3f& x, const Plane& p) {
+inline static float get_value_on_plane(const Point3f& x, const Plane& p) {
     return p.a * x.x[0] + p.b * x.x[1] + p.c * x.x[2] + p.d;
 }
 
@@ -276,6 +277,7 @@ bool euler_simple_circuit(vector<int>& path, vector<bool>& visited, vector<vecto
             adj_vertex[v][j] = u;
             adj_vertex[u][i] = v;
         }
+    return false;
 }
 
 void euler_simple_circuit(vector<int>& path, vector<vector<int> >& adj_vertex, int v) {
@@ -370,7 +372,7 @@ void partition_by_plane(Object& o, const Plane& p) {
     int flag_count = 0;
     bool remain_flag; // vertex i satisfying that vertex_flag[i] is equal to remain_flag would remain
     for (unsigned i = 0; i < o.vertex.size(); ++i) {
-        vertex_flag[i] = get_value_on_line(o.vertex[i], p) >= 0;
+        vertex_flag[i] = get_value_on_plane(o.vertex[i], p) >= 0;
         if (vertex_flag[i])
             flag_count++;
         else
@@ -513,7 +515,6 @@ void gen_offset_vertex(const Object& o, float offset, Object& m) {
 
 void gen_offset_invalid_vertex(const Object& o, const Object& m, float offset, vector<bool>& is_invalid) {
     // Mark Vertex i_m as invalid if Line (i_m, i_o) intersects with any face.
-    float threshold = offset * offset / 2;
     for (int i = 0; i < o.vertex.size(); ++i) {
         if (!is_vertex_normal_valid(o, i)) {
             cout << "Invalid: Vertex " << i << endl;
@@ -696,4 +697,30 @@ void mesh_offset(Object& o, float offset) {
     DEBUG()
     o.update();
     laplacian_hc_smooth(o,3);
+}
+
+void remove_face_by_plane(Object& o, const Plane& p) {
+    vector<bool> is_vertex_on_plane(o.vertex.size(), false);
+    for (int i = 0; i < o.vertex.size(); ++i) {
+        if (fabs(get_value_on_plane(o.vertex[i], p)) < eps) {
+            is_vertex_on_plane[i] = true;
+            cout << "Vertex on plane: " << i << endl;
+        }
+    }
+    vector<bool> is_face_on_plane(o.face.size(), false);
+    for (int i = 0; i < o.face.size(); ++i) {
+        if (is_vertex_on_plane[o.face[i].vertex_index[0]] &&
+            is_vertex_on_plane[o.face[i].vertex_index[1]] &&
+            is_vertex_on_plane[o.face[i].vertex_index[2]])
+            is_face_on_plane[i] = true;
+    }
+    vector<Triangle> face;
+    face.swap(o.face);
+    for (int i = 0; i < face.size(); ++i)
+        if (!is_face_on_plane[i])
+            o.face.push_back(face[i]);
+    o.update();
+}
+
+void fill_face_by_plane(Object& o, const Plane& p) {
 }
