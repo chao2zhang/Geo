@@ -30,7 +30,6 @@ void Object::connect_face(int u, int v) {
 }
 
 void Object::remove_unused_vertex() {
-    DEBUG()
     vector<bool> use_vertex(vertex.size(), false);
     vector<int> vertex_index(vertex.size());
     for (int i = 0; i < face.size(); ++i) {
@@ -55,7 +54,6 @@ void Object::remove_unused_vertex() {
 }
 
 void Object::remove_unused_texture() {
-    DEBUG()
     vector<bool> use_texture(texture.size(), false);
     vector<int> texture_index(texture.size());
     for (int i = 0; i < face.size(); ++i) {
@@ -79,7 +77,6 @@ void Object::remove_unused_texture() {
 }
 
 void Object::calculate_adj_face() {
-    DEBUG()
     // Only called after calculate_adj_vertex() and calculate_faces_of_vertex()
     #define conn_adj_face(a, b)\
         for (int j : faces_of_vertex[a])\
@@ -100,7 +97,6 @@ void Object::calculate_adj_face() {
 }
 
 void Object::calculate_adj_vertex() {
-    DEBUG()
     // Calculate adjacent list
     adj_vertex.clear();
     adj_vertex.resize(vertex.size());
@@ -115,7 +111,6 @@ void Object::calculate_adj_vertex() {
 }
 
 void Object::calculate_faces_of_vertex() {
-    DEBUG()
     // Calculate faces of a specific vertex
     faces_of_vertex.clear();
     faces_of_vertex.resize(vertex.size());
@@ -126,7 +121,6 @@ void Object::calculate_faces_of_vertex() {
     }
 }
 void Object::calculate_face_normal() {
-    DEBUG()
     face_normal.clear();
     face_normal.resize(face.size());
     for (int i = 0; i < face.size(); ++i) {
@@ -136,7 +130,6 @@ void Object::calculate_face_normal() {
 }
 
 void Object::calculate_vertex_normal() {
-    DEBUG()
     vertex_normal.clear();
     vertex_normal.resize(vertex.size());
     for (int i = 0; i < vertex.size(); ++i) {
@@ -147,6 +140,7 @@ void Object::calculate_vertex_normal() {
 }
 
 void Object::update(bool clean) {
+    DEBUG()
     if (clean) {
         remove_unused_vertex();
         remove_unused_texture();

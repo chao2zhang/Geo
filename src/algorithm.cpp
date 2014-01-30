@@ -707,20 +707,71 @@ void remove_face_by_plane(Object& o, const Plane& p) {
             cout << "Vertex on plane: " << i << endl;
         }
     }
-    vector<bool> is_face_on_plane(o.face.size(), false);
-    for (int i = 0; i < o.face.size(); ++i) {
-        if (is_vertex_on_plane[o.face[i].vertex_index[0]] &&
-            is_vertex_on_plane[o.face[i].vertex_index[1]] &&
-            is_vertex_on_plane[o.face[i].vertex_index[2]])
-            is_face_on_plane[i] = true;
-    }
     vector<Triangle> face;
-    face.swap(o.face);
-    for (int i = 0; i < face.size(); ++i)
-        if (!is_face_on_plane[i])
-            o.face.push_back(face[i]);
+    for (int i = 0; i < o.face.size(); ++i) {
+        if (!is_vertex_on_plane[o.face[i].vertex_index[0]] ||
+            !is_vertex_on_plane[o.face[i].vertex_index[1]] ||
+            !is_vertex_on_plane[o.face[i].vertex_index[2]])
+            face.push_back(o.face[i]);
+    }
+    o.face.swap(face);
     o.update();
 }
 
-void fill_face_by_plane(Object& o, const Plane& p) {
+void get_max_border_path_by_plane(Object& o, const Plane& p, vector<int>& max_path) {
+    vector<vector<int> > adj_vertex(o.vertex.size());
+    gen_border_graph(o, adj_vertex);
+    for (int i = 0; i < o.vertex.size(); ++i)
+        for (int j = 0; j < adj_vertex[i].size(); ++j)
+            if (adj_vertex[i][j] != -1) {
+                vector<int> path;
+                euler_simple_circuit(path, adj_vertex, i);
+                if (path.size() > max_path.size())
+                    max_path = path;
+            }
+    vector<int> tmp_path;
+    for (int i = 0; i < max_path.size(); ++i)
+        if (fabs(get_value_on_plane(o.vertex[max_path[i]], p)) < eps)
+            tmp_path.push_back(max_path[i]);
+    max_path.swap(tmp_path);
+}
+
+void fill_max_border_face_by_plane(Object& o, const Plane& p) {
+    vector<int> path;
+    get_max_border_path_by_plane(o, p, path);
+
+    DEBUG()
+    // Split edge
+    vector<float> length(path.size(), 0);
+    for (int i = 0; i < path.size(); ++i)
+        length[i] = (o.vertex[i] - o.vertex[(i+1) % path.size()]).length();
+    float avg_length = 0;
+    for (float l : length)
+        avg_length += l;
+    avg_length /= length.size();
+    float std_dev_length = 0;
+    for (float l : length)
+        std_dev_length += (l - avg_length) * (l - avg_length);
+    std_dev_length /= length.size();
+    std_dev_length = sqrt(std_dev_length);
+    cout << "Avg length: " << avg_length << " Std dev: " << std_dev_length << " Total: " << path.size() << endl;
+
+    for (int i = 0; i < path.size(); ++i)
+        if (length[i] > avg_length + 2 * std_dev_length) {
+            cout << "Length at index " << i << " is too long" << endl;
+            int num_to_add = floor(length[i] / avg_length);
+            Point3f&& unit = (o.vertex[path[(i+1) % path.size()]] - o.vertex[path[i]]) / (num_to_add + 1);
+            for (int j = 1; j <= num_to_add; ++j)
+                o.vertex.push_back(o.vertex[path[i]] + unit * j);
+        }
+    for (int i = 1; i < path.size() - 1; i++) {
+        Triangle t;
+        t.vertex_index[0] = path[0];
+        t.vertex_index[1] = path[i];
+        t.vertex_index[2] = path[(i + 1) % path.size()];
+        t.texture_index[0] = 0;
+        t.texture_index[1] = 0;
+        t.texture_index[2] = 0;
+        o.face.push_back(t);
+    }
 }

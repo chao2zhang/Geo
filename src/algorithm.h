@@ -16,6 +16,6 @@ void count_spike(Object& o, float dot_product=0);
 void mark_spike(Object& o, float dot_product=0);
 void mesh_offset(Object& o, float offset);
 void remove_face_by_plane(Object& o, const Plane& p);
-void fill_face_by_plane(Object& o, const Plane& p);
+void fill_max_border_face_by_plane(Object& o, const Plane& p);
 
 #endif

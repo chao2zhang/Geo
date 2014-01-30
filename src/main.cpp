@@ -51,13 +51,17 @@ int main(int argc, char** argv) {
     project_by_plane(o, Plane(0.586, 0.980, -0.993, 1.1));
     END_TIME("Executing projecting...")
 
-    START_TIME("Executing projecting...")
+    START_TIME("Executing removing...")
     remove_face_by_plane(o, Plane(0.837, -0.234, 0.263, -0.8));
-    END_TIME("Executing projecting...")
+    END_TIME("Executing removing...")
 
-    START_TIME("Executing unify normals...")
-    unify_face_normals(o);
-    END_TIME("Executing unify normals...")
+    START_TIME("Executing filling...")
+    fill_max_border_face_by_plane(o, Plane(0.586, 0.980, -0.993, 1.1));
+    END_TIME("Executing filling...")
+
+//    START_TIME("Executing unify normals...")
+//    unify_face_normals(o);
+//    END_TIME("Executing unify normals...")
 
     START_TIME("Writing...")
     o.save(out);
