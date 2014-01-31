@@ -22,12 +22,16 @@ inline Point3f cross_product(const Point3f& self, const Point3f& other);
 class Point3f {
 public:
     float x[3];
+    Point3f() {
+        x[0] = 0;
+        x[1] = 0;
+        x[2] = 0;
+    }
     Point3f(float a, float b, float c) {
         x[0] = a;
         x[1] = b;
         x[2] = c;
     }
-    Point3f():Point3f(0, 0, 0) {}
     Point3f(const Point3f& other) {
         memcpy(x, other.x, sizeof(float) * 3);
     }
@@ -158,7 +162,10 @@ public:
         x[0] = a;
         x[1] = b;
     }
-    Point2f():Point2f(0, 0) {}
+    Point2f() {
+        x[0] = 0;
+        x[1] = 0;
+    }
     Point2f(const Point2f& other) {
         memcpy(x, other.x, sizeof(float) * 2);
     }

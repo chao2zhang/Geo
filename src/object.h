@@ -12,8 +12,32 @@
 
 class Triangle {
 public:
-    int vertex_index[3];
-    int texture_index[3];
+    int vertex_index[3] {0, 0, 0};
+    int texture_index[3] {0, 0, 0};
+    Triangle() {
+        vertex_index[0] = 0;
+        vertex_index[1] = 0;
+        vertex_index[2] = 0;
+        texture_index[0] = 0;
+        texture_index[1] = 0;
+        texture_index[2] = 0;
+    }
+    Triangle(int u, int v, int w) {
+        vertex_index[0] = u;
+        vertex_index[1] = v;
+        vertex_index[2] = w;
+        texture_index[0] = 0;
+        texture_index[1] = 0;
+        texture_index[2] = 0;
+    }
+    Triangle(int u, int v, int w, int r, int s, int t) {
+        vertex_index[0] = u;
+        vertex_index[1] = v;
+        vertex_index[2] = w;
+        texture_index[0] = r;
+        texture_index[1] = s;
+        texture_index[2] = t;
+    }
     bool has_vertex(int i) const {
         return vertex_index[0] == i || vertex_index[1] == i || vertex_index[2] == i;
     }

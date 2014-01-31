@@ -16,6 +16,42 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+template<typename T>
+inline static typename T::iterator next(T& collection, typename T::iterator it) {
+    typename T::iterator r(it);
+    ++r;
+    if (r == collection.end())
+        r = collection.begin();
+    return r;
+}
+
+template<typename T>
+inline static typename T::const_iterator next(const T& collection, typename T::const_iterator it) {
+    typename T::const_iterator r(it);
+    ++r;
+    if (r == collection.end())
+        r = collection.begin();
+    return r;
+}
+
+template<typename T>
+inline static typename T::iterator prev(T& collection, typename T::iterator it) {
+    typename T::iterator r(it);
+    if (r == collection.begin())
+        r = collection.end();
+    --r;
+    return r;
+}
+
+template<typename T>
+inline static typename T::const_iterator prev(T& collection, typename T::const_iterator it) {
+    typename T::const_iterator r(it);
+    if (r == collection.begin())
+        r = collection.end();
+    --r;
+    return r;
+}
+
 inline static void get_texture_with_edge(const Object& o, int u, int v, int& tu, int& tv) {
     for (int i = 0; i < o.faces_of_vertex[u].size(); ++i) {
         if (o.face[o.faces_of_vertex[u][i]].has_vertex(v)) {
@@ -397,19 +433,23 @@ void partition_by_plane(Object& o, const Plane& p) {
         remainCount += vertex_flag[f.vertex_index[0]] == remain_flag;
         remainCount += vertex_flag[f.vertex_index[1]] == remain_flag;
         remainCount += vertex_flag[f.vertex_index[2]] == remain_flag;
-        if (remainCount == 2) { // Move the point outside to the border
+        if (remainCount == 2) {
+            // Move the point outside to the border
+            // Texture might be wrong
             int j = 0;
             while (vertex_flag[f.vertex_index[j]] == remain_flag) ++j;
-            Point3f midpoint = (o.vertex[f.vertex_index[0]] +
+            Point3f&& midpoint = (o.vertex[f.vertex_index[0]] +
                                 o.vertex[f.vertex_index[1]] +
                                 o.vertex[f.vertex_index[2]] -
                                 o.vertex[f.vertex_index[j]]) / 2;
             o.vertex[f.vertex_index[j]] = get_intersect_point(midpoint, o.vertex[f.vertex_index[j]], p);
             vertex_flag[f.vertex_index[j]] = remain_flag;
-        } else if (remainCount == 1) { // Move the points outside to the border
+        } else if (remainCount == 1) {
+            // Move the points outside to the border
+            // Texture might be wrong
             int j = 0;
             while (vertex_flag[f.vertex_index[j]] != remain_flag) ++j;
-            for (int k = 0; k < 3; k++)
+            for (int k = 0; k < 3; ++k)
                 if (k != j) {
                     o.vertex[f.vertex_index[k]] = get_intersect_point(
                         o.vertex[f.vertex_index[j]],
@@ -718,7 +758,7 @@ void remove_face_by_plane(Object& o, const Plane& p) {
     o.update();
 }
 
-void get_max_border_path_by_plane(Object& o, const Plane& p, vector<int>& max_path) {
+void get_max_border_path_by_plane(Object& o, const Plane& p, list<int>& max_path) {
     vector<vector<int> > adj_vertex(o.vertex.size());
     gen_border_graph(o, adj_vertex);
     for (int i = 0; i < o.vertex.size(); ++i)
@@ -727,24 +767,73 @@ void get_max_border_path_by_plane(Object& o, const Plane& p, vector<int>& max_pa
                 vector<int> path;
                 euler_simple_circuit(path, adj_vertex, i);
                 if (path.size() > max_path.size())
-                    max_path = path;
+                    max_path.assign(path.begin(), path.end());
             }
-    vector<int> tmp_path;
-    for (int i = 0; i < max_path.size(); ++i)
-        if (fabs(get_value_on_plane(o.vertex[max_path[i]], p)) < eps)
-            tmp_path.push_back(max_path[i]);
-    max_path.swap(tmp_path);
+    for (list<int>::iterator i = max_path.begin(); i != max_path.end();)
+        if (fabs(get_value_on_plane(o.vertex[*i], p)) > eps)
+            i = max_path.erase(i);
+        else
+            ++i;
+}
+
+void advance_front_along_path(Object& o, list<int> path) {
+    list<int>::iterator i = path.begin();
+    DEBUG()
+    while (i != path.end()) {
+        list<int>::iterator j = prev<list<int> >(path, i);
+        list<int>::iterator k = next<list<int> >(path, i);
+        // j-i-k <=> u-v-w
+        Point3f& u = o.vertex[*j];
+        Point3f& v = o.vertex[*i];
+        Point3f& w = o.vertex[*k];
+        Point3f&& a = u - v;
+        Point3f&& b = w - v;
+        float la = a.length();
+        float lb = b.length();
+        a.normalize();
+        b.normalize();
+        float cos_value = a * b;
+        // link u and w when cos in (0, 75)
+        // add a new point when cos in (75, 135)
+        // add two new points when cos in (135, 180)
+        if (cos_value > COS_75) {
+            o.face.push_back(Triangle(*j, *i, *k));
+            i = path.erase(i);
+        } else if (cos_value > - COS_45) {
+            Point3f&& p = v + ((a + b).normalize() * (la + lb) / 2);
+            o.vertex.push_back(p);
+            o.face.push_back(Triangle(*j, *i, o.vertex.size() - 1));
+            o.face.push_back(Triangle(o.vertex.size() - 1, *i, *k));
+            path.insert(i, o.vertex.size() - 1);
+            i = path.erase(i);
+            ++i;
+        } else {
+            Point3f&& p = v + ((a + a + b).normalize() * (la + la + lb) / 3);
+            Point3f&& q = v + ((a + b + b).normalize() * (la + lb + lb) / 3);
+            o.vertex.push_back(p);
+            o.vertex.push_back(q);
+            o.face.push_back(Triangle(*j, *i, o.vertex.size() - 2));
+            o.face.push_back(Triangle(o.vertex.size() - 2, *i, o.vertex.size() - 1));
+            o.face.push_back(Triangle(o.vertex.size() - 1, *i, *k));
+            path.insert(i, o.vertex.size() - 2);
+            path.insert(i, o.vertex.size() - 1);
+            i = path.erase(i);
+            ++i;
+        }
+    }
 }
 
 void fill_max_border_face_by_plane(Object& o, const Plane& p) {
-    vector<int> path;
+    list<int> path;
     get_max_border_path_by_plane(o, p, path);
 
     DEBUG()
     // Split edge
-    vector<float> length(path.size(), 0);
-    for (int i = 0; i < path.size(); ++i)
-        length[i] = (o.vertex[i] - o.vertex[(i+1) % path.size()]).length();
+    list<float> length;
+    for (list<int>::const_iterator i = path.begin(); i != path.end(); ++i) {
+        list<int>::const_iterator j = next<list<int> >(path, i);
+        length.push_back((o.vertex[*i] - o.vertex[*j]).length());
+    }
     float avg_length = 0;
     for (float l : length)
         avg_length += l;
@@ -756,22 +845,30 @@ void fill_max_border_face_by_plane(Object& o, const Plane& p) {
     std_dev_length = sqrt(std_dev_length);
     cout << "Avg length: " << avg_length << " Std dev: " << std_dev_length << " Total: " << path.size() << endl;
 
-    for (int i = 0; i < path.size(); ++i)
-        if (length[i] > avg_length + 2 * std_dev_length) {
-            cout << "Length at index " << i << " is too long" << endl;
-            int num_to_add = floor(length[i] / avg_length);
-            Point3f&& unit = (o.vertex[path[(i+1) % path.size()]] - o.vertex[path[i]]) / (num_to_add + 1);
-            for (int j = 1; j <= num_to_add; ++j)
-                o.vertex.push_back(o.vertex[path[i]] + unit * j);
+    list<int>::iterator i = path.begin();
+    list<float>::iterator k = length.begin();
+    for (;i != path.end(); ++i, ++k)
+        if (*k > avg_length + 2 * std_dev_length) {
+            cout << "Length at vertex " << *i << " is too long" << endl;
+            int num_to_add = floor(*k / avg_length);
+            list<int>::iterator j = next<list<int> >(path, i);
+            Point3f&& unit = (o.vertex[*j] - o.vertex[*i]) / (num_to_add + 1);
+            for (int n = 1; n <= num_to_add; ++n) {
+                o.vertex.push_back(o.vertex[*i] + unit * n);
+                path.insert(j, o.vertex.size() - 1);
+            }
         }
-    for (int i = 1; i < path.size() - 1; i++) {
-        Triangle t;
-        t.vertex_index[0] = path[0];
-        t.vertex_index[1] = path[i];
-        t.vertex_index[2] = path[(i + 1) % path.size()];
-        t.texture_index[0] = 0;
-        t.texture_index[1] = 0;
-        t.texture_index[2] = 0;
-        o.face.push_back(t);
-    }
+
+    advance_front_along_path(o, path);
+//    for (int i = 1; i < path.size() - 1; i++) {
+//        Triangle t;
+//        t.vertex_index[0] = path[0];
+//        t.vertex_index[1] = path[i];
+//        t.vertex_index[2] = path[(i + 1) % path.size()];
+//        t.texture_index[0] = 0;
+//        t.texture_index[1] = 0;
+//        t.texture_index[2] = 0;
+//        o.face.push_back(t);
+//    }
+    o.update();
 }
