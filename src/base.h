@@ -9,6 +9,11 @@ const float eps = 0.001;
 #define DEBUG() cerr << __FILE__ << ':' << __LINE__ << ' ' << __func__ << "()" << endl;
 #endif // DEBUGGABLE
 
+#define PI     3.14159265359
+#define PI_2   1.57079632679
+#define PI_4   0.78539816339
+#define PI_3_4 2.35619449019
+
 #define COS_0  1
 #define COS_15 0.965926
 #define COS_30 0.866025

@@ -143,6 +143,10 @@ inline Point3f cross_product(const Point3f& self, const Point3f& other) {
     return ret;
 }
 
+inline float cos(const Point3f& self, const Point3f& other) {
+    return self * other / self.length() / other.length();
+}
+
 class Point2f;
 
 inline Point2f operator+(const Point2f& self, const Point2f& other);
@@ -261,6 +265,10 @@ inline Point2f operator/(const Point2f& self, float other) {
     Point2f ret(self);
     ret /= other;
     return ret;
+}
+
+inline float cos(const Point2f& self, const Point2f& other) {
+    return self * other / self.length() / other.length();
 }
 
 #endif
