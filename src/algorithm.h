@@ -6,17 +6,18 @@
 #include "plane.h"
 #include "mesh.h"
 
-void laplacian_hc_smooth(Mesh& f, int times=1, float alpha=0.1, float beta=0.6);
-void laplacian_smooth(Mesh& f, int times=1, float lambda=0.5);
-void center_positioning_by_bounding_box(Mesh& f);
-void center_positioning_by_averaging_vertex(Mesh& f);
-void partition_by_plane(Mesh& f, const Plane& p);
-void project_by_plane(Mesh& f, const Plane& p);
-void unify_face_normals(Mesh& f);
-void count_spike(Mesh& f, float dot_product=0);
-void mark_spike(Mesh& f, float dot_product=0);
-void mesh_offset(Mesh& f, float offset);
-void remove_face_by_plane(Mesh& f, const Plane& p);
-void fill_max_border_face_by_plane(Mesh& f, const Plane& p);
+void laplacian_hc_smooth(Mesh& m, int times=1, float alpha=0.1, float beta=0.6);
+void laplacian_smooth(Mesh& m, int times=1, float lambda=0.5);
+void center_positioning_by_bounding_box(Mesh& m);
+void center_positioning_by_averaging_vertex(Mesh& m);
+void partition_by_plane(Mesh& m, const Plane& p);
+void project_by_plane(Mesh& m, const Plane& p);
+void unify_face_normals(Mesh& m);
+void count_spike(Mesh& m, float dot_product=0);
+void mark_spike(Mesh& m, float dot_product=0);
+void mesh_offset(Mesh& m, float offset);
+void remove_face_by_plane(Mesh& m, const Plane& p);
+void fill_max_border_face_by_plane(Mesh& m, const Plane& p);
+void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p);
 
 #endif

@@ -1,4 +1,4 @@
-#include "object.h"
+#include "mesh.h"
 
 #include <ctime>
 #include <fstream>

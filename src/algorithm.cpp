@@ -5,6 +5,8 @@
 #include <queue>
 #include <utility>
 #include <cmath>
+#include <iterator>
+#include <algorithm>
 
 using std::vector;
 using std::list;
@@ -15,6 +17,8 @@ using std::string;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::iterator_traits;
+using std::next;
 
 template<typename T>
 inline static typename T::iterator next(T& collection, typename T::iterator it) {
@@ -44,13 +48,31 @@ inline static typename T::iterator prev(T& collection, typename T::iterator it) 
 }
 
 template<typename T>
-inline static typename T::const_iterator prev(T& collection, typename T::const_iterator it) {
+inline static typename T::const_iterator prev(const T& collection, typename T::const_iterator it) {
     typename T::const_iterator r(it);
     if (r == collection.begin())
         r = collection.end();
     --r;
     return r;
 }
+
+template<typename T, typename V = typename iterator_traits<typename T::const_iterator>::value_type>
+inline static V average(const T& collection) {
+    V val = 0;
+    for (const V& v: collection)
+        val += v;
+    return val / collection.size();
+}
+
+template<typename T, typename V = typename iterator_traits<typename T::const_iterator>::value_type>
+inline static V standard_deviation(const T& collection) {
+    V val = 0;
+    V avg = average(collection);
+    for (const V& v: collection)
+        val += (v - avg) * (v - avg);
+    return sqrt(val / collection.size());
+}
+
 
 inline static void get_texture_with_edge(const Mesh& m, int u, int v, int& tu, int& tv) {
     for (int i = 0; i < m.faces_of_vertex[u].size(); ++i) {
@@ -155,53 +177,78 @@ inline static void get_shared_edge(const Mesh& m, int f, int g, int& u, int& v, 
 }
 
 /*
+ * Tell if Point p lies inside triangle xyz
+ */
+inline static bool is_inside_triangle(const Point3f& x, const Point3f& y, const Point3f& z, const Point3f& p) {
+    const Point3f&& a = x - p;
+    const Point3f&& b = y - p;
+    const Point3f&& c = z - p;
+    const Point3f&& u = cross_product(b, c);
+    const Point3f&& v = cross_product(c, a);
+    if (u * v < 0)
+        return false;
+    const Point3f&& w = cross_product(a, b);
+    if (u * w < 0)
+        return false;
+    return true;
+}
+
+inline static bool is_less_than_bounding_box_along_axis(const Mesh& m, const Point3f& p, int f, int axis) {
+    return
+        p.x[axis] < m.vertex[m.face[f].vertex_index[0]].x[axis] &&
+        p.x[axis] < m.vertex[m.face[f].vertex_index[1]].x[axis] &&
+        p.x[axis] < m.vertex[m.face[f].vertex_index[2]].x[axis];
+}
+
+inline static bool is_more_than_bounding_box_along_axis(const Mesh& m, const Point3f& p, int f, int axis) {
+    return
+        p.x[axis] > m.vertex[m.face[f].vertex_index[0]].x[axis] &&
+        p.x[axis] > m.vertex[m.face[f].vertex_index[1]].x[axis] &&
+        p.x[axis] > m.vertex[m.face[f].vertex_index[2]].x[axis];
+}
+
+/*
  * Tell if Line xy intersects with Face f
  */
 inline static bool is_intersect(const Mesh& m, const Point3f& x, const Point3f& y, int f) {
-    // Acceleration: If Line xy is outside the bounding box of Face f, it cannot intersect with the face.
-    #define smaller_than_bounding_box(p,f,axis) \
-       (p.x[axis] < m.vertex[m.face[f].vertex_index[0]].x[axis] &&\
-        p.x[axis] < m.vertex[m.face[f].vertex_index[1]].x[axis] &&\
-        p.x[axis] < m.vertex[m.face[f].vertex_index[2]].x[axis])
-    #define larger_than_bounding_box(p,f,axis) \
-       (p.x[axis] > m.vertex[m.face[f].vertex_index[0]].x[axis] &&\
-        p.x[axis] > m.vertex[m.face[f].vertex_index[1]].x[axis] &&\
-        p.x[axis] > m.vertex[m.face[f].vertex_index[2]].x[axis])
-    if (smaller_than_bounding_box(x,f,0) && smaller_than_bounding_box(y,f,0))
+    // Acceleration:
+    // If Line xy is outside the bounding box of Face f,
+    // it cannot intersect with the face.
+    if (is_less_than_bounding_box_along_axis(m,x,f,0) &&
+        is_less_than_bounding_box_along_axis(m,y,f,0))
         return false;
-    if (smaller_than_bounding_box(x,f,1) && smaller_than_bounding_box(y,f,1))
+    if (is_less_than_bounding_box_along_axis(m,x,f,1) &&
+        is_less_than_bounding_box_along_axis(m,y,f,1))
         return false;
-    if (smaller_than_bounding_box(x,f,2) && smaller_than_bounding_box(y,f,2))
+    if (is_less_than_bounding_box_along_axis(m,x,f,2) &&
+        is_less_than_bounding_box_along_axis(m,y,f,2))
         return false;
-    if (larger_than_bounding_box(x,f,0) && larger_than_bounding_box(y,f,0))
+    if (is_more_than_bounding_box_along_axis(m,x,f,0) &&
+        is_more_than_bounding_box_along_axis(m,y,f,0))
         return false;
-    if (larger_than_bounding_box(x,f,1) && larger_than_bounding_box(y,f,1))
+    if (is_more_than_bounding_box_along_axis(m,x,f,1) &&
+        is_more_than_bounding_box_along_axis(m,y,f,1))
         return false;
-    if (larger_than_bounding_box(x,f,2) && larger_than_bounding_box(y,f,2))
+    if (is_more_than_bounding_box_along_axis(m,x,f,2) &&
+        is_more_than_bounding_box_along_axis(m,y,f,2))
         return false;
-    #undef smaller_than_bounding_box
-    #undef larger_than_bounding_box
+
+    // If the intersect point of Line xy and Plane p lies between x and y.
     const Point3f& n = m.face_normal[f];
     Plane p(n.x[0], n.x[1], n.x[2], m.vertex[m.face[f].vertex_index[0]] * n * -1);
     const Point3f&& i = get_intersect_point(x, y, p);
     if ((i - x) * (i - y) > 0)
         return false;
-    const Point3f&& a = m.vertex[m.face[f].vertex_index[2]] - i;
-    const Point3f&& b = m.vertex[m.face[f].vertex_index[1]] - i;
-    const Point3f&& c = m.vertex[m.face[f].vertex_index[0]] - i;
-    const Point3f&& u = cross_product(b, c);
-    const Point3f&& v = cross_product(c, a);
-    if (u * v < 0) return false;
-    const Point3f&& w = cross_product(a, b);
-    if (u * w < 0) return false;
-    return true;
+
+    return is_inside_triangle(m.vertex[m.face[f].vertex_index[0]],
+                              m.vertex[m.face[f].vertex_index[1]],
+                              m.vertex[m.face[f].vertex_index[2]],
+                              i);
 }
 
 /*
  * If the winding of Face f is correct, tell if the winding of Face g is correct.
- *
- * Face f SHOULD BE adjacent to Face g!!!
- *
+ * CONDITION: Face f should be adjacent to Face g.
  */
 inline static bool is_correct_winding(Mesh& m, int f, int g) {
     int x, y, rf, rg;
@@ -558,7 +605,7 @@ void count_spike(Mesh& m, float dot_product) {
             float cos = m.face_normal[i] * m.face_normal[j];
             if (is_correct_winding(m, i, j))
                 cos *= -1;
-            if (cos < dot_product - eps)
+            if (cos < dot_product)
                 spike++;
             total++;
         }
@@ -576,7 +623,7 @@ void mark_spike(Mesh& m, float dot_product, vector<bool>& is_invalid) {
             float cos = m.face_normal[i] * m.face_normal[j];
             if (is_correct_winding(m, i, j))
                 cos *= -1;
-            if (cos < dot_product - eps) {
+            if (cos < dot_product) {
                 spike++;
                 is_invalid[i] = true;
                 is_invalid[j] = true;
@@ -624,7 +671,7 @@ void gen_offset_face(const Mesh& m, Mesh& n, const vector<bool>& is_invalid) {
         // If the offset face is flipped, they should be rejected.
         Point3f c = cross_product(m.vertex[f.vertex_index[1]] - m.vertex[f.vertex_index[0]],
                                   m.vertex[f.vertex_index[2]] - m.vertex[f.vertex_index[0]]).normalize();
-        if (c * m.face_normal[i] > -eps)
+        if (c * m.face_normal[i] > 0)
             continue;
         f.texture_index[0] = face.texture_index[1];
         f.texture_index[1] = face.texture_index[0];
@@ -762,7 +809,6 @@ void mesh_offset(Mesh& m, float offset) {
     gen_offset_invalid_vertex(m, n, offset, is_vertex_invalid);
     gen_offset_face(m, n, is_vertex_invalid);
     n.update(false);
-
     //vector<bool> face_invalid(n.face.size(), false);
     //detect_self_intersect(n, face_invalid);
     //vector<int> face_group(n.face.size(), 0);
@@ -773,10 +819,6 @@ void mesh_offset(Mesh& m, float offset) {
     //n.update(false);
     //fill_trivial_hole(n);
     enclose_offset_mesh(m, n, is_vertex_invalid);
-//    m.vertex = n.vertex;
-//    m.texture = n.texture;
-//    m.face = n.face;
-    DEBUG()
     m.update();
     laplacian_hc_smooth(m,3);
 }
@@ -823,10 +865,8 @@ void get_max_border_path_by_plane(Mesh& m, const Plane& p, list<int>& max_path) 
  * This function is to return a normal vector R(orientation vector)
  * If uv X vw is in the same direction of R, then the angle uvw is smaller than 180 degree.
  */
-Point3f get_orientation_vector_of_advance_front_on_plane(const Mesh& m, list<int>& path) {
-    // The main idea is that sum of outer angles is always larger than the sum of inner angles.
-    // Formula: the sum of inner angles equals (n - 2) pi, so the sum of outer angles is (n + 2) pi
-    Point3f&& inner_orientation;
+Point3f get_orientation_vector_of_path_on_plane(const Mesh& m, const list<int>& path) {
+    Point3f inner_orientation;
     list<int>::const_iterator i = path.begin();
     do {
         list<int>::const_iterator j = prev<list<int> >(path, i);
@@ -835,7 +875,6 @@ Point3f get_orientation_vector_of_advance_front_on_plane(const Mesh& m, list<int
                                           m.vertex[*k] - m.vertex[*i]);
         ++i;
     } while (inner_orientation.length() < eps);
-
     i = path.begin();
     float inner_sum = 0;
     while (i != path.end()) {
@@ -843,25 +882,30 @@ Point3f get_orientation_vector_of_advance_front_on_plane(const Mesh& m, list<int
         list<int>::const_iterator k = next<list<int> >(path, i);
         Point3f&& a = m.vertex[*i] - m.vertex[*j];
         Point3f&& b = m.vertex[*k] - m.vertex[*i];
+        float angle = acosf(cos(a, b));
         if (cross_product(a, b) * inner_orientation > 0)
-            inner_sum += acosf(cos(-a, b));
+            inner_sum += angle;
         else
-            inner_sum += 2 * PI - acosf(cos(-a, b));
+            inner_sum -= angle;
+        ++i;
     }
 
-    if (inner_sum > path.size() * PI)
-        return -inner_orientation;
+    cout << "inner_sum: " << inner_sum << endl;
+    // inner_sum must be +2PI or -2PI
+    if (inner_sum > 0)
+        return inner_orientation.normalize();
     else
-        return inner_orientation;
+        return -inner_orientation.normalize();
 }
 
 void advance_front_on_plane(Mesh& m, list<int> path) {
-    list<int>::iterator i = path.begin();
     DEBUG()
+    Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
+    cout << inner_orientation.x[0] << ' ' << inner_orientation.x[1] << ' ' << inner_orientation.x[2] << endl;
+    list<int>::iterator i = path.begin();
     while (i != path.end()) {
         list<int>::iterator j = prev<list<int> >(path, i);
         list<int>::iterator k = next<list<int> >(path, i);
-        // j-i-k <=> u-v-w
         Point3f& u = m.vertex[*j];
         Point3f& v = m.vertex[*i];
         Point3f& w = m.vertex[*k];
@@ -872,13 +916,14 @@ void advance_front_on_plane(Mesh& m, list<int> path) {
         a.normalize();
         b.normalize();
         float cos_value = a * b;
+        bool convex = cross_product(-a, b) * inner_orientation > eps;
         // link u and w when cos in (0, 75)
         // add a new point when cos in (75, 135)
-        // add two new points when cos in (135, 180)
-        if (cos_value > COS_75) {
+        // add a regular triangle when cos in (135, 180)
+        if (convex && cos_value > 0) {
             m.face.push_back(Face(*j, *i, *k));
             i = path.erase(i);
-        } else if (cos_value > - COS_45) {
+        } else if (convex && cos_value > -COS_60) {
             Point3f&& p = v + ((a + b).normalize() * (la + lb) / 2);
             m.vertex.push_back(p);
             m.face.push_back(Face(*j, *i, m.vertex.size() - 1));
@@ -887,17 +932,13 @@ void advance_front_on_plane(Mesh& m, list<int> path) {
             i = path.erase(i);
             ++i;
         } else {
-            Point3f&& p = v + ((a + a + b).normalize() * (la + la + lb) / 3);
-            Point3f&& q = v + ((a + b + b).normalize() * (la + lb + lb) / 3);
+            Point3f&& mid_vert = cross_product(a, inner_orientation);
+            mid_vert.normalize();
+            Point3f&& mid_point = (u + v) / 2;
+            Point3f&& p = mid_point + mid_vert * COS_30 * la;
             m.vertex.push_back(p);
-            m.vertex.push_back(q);
-            m.face.push_back(Face(*j, *i, m.vertex.size() - 2));
-            m.face.push_back(Face(m.vertex.size() - 2, *i, m.vertex.size() - 1));
-            m.face.push_back(Face(m.vertex.size() - 1, *i, *k));
-            path.insert(i, m.vertex.size() - 2);
+            m.face.push_back(Face(*j, *i, m.vertex.size() - 1));
             path.insert(i, m.vertex.size() - 1);
-            i = path.erase(i);
-            ++i;
         }
     }
 }
@@ -913,17 +954,8 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
         list<int>::const_iterator j = next<list<int> >(path, i);
         length.push_back((m.vertex[*i] - m.vertex[*j]).length());
     }
-    float avg_length = 0;
-    for (float l : length)
-        avg_length += l;
-    avg_length /= length.size();
-    float std_dev_length = 0;
-    for (float l : length)
-        std_dev_length += (l - avg_length) * (l - avg_length);
-    std_dev_length /= length.size();
-    std_dev_length = sqrt(std_dev_length);
-    cout << "Avg length: " << avg_length << " Std dev: " << std_dev_length << " Total: " << path.size() << endl;
-
+    float avg_length = average(length);
+    float std_dev_length = standard_deviation(length);
     list<int>::iterator i = path.begin();
     list<float>::iterator k = length.begin();
     for (;i != path.end(); ++i, ++k)
@@ -937,17 +969,62 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
                 path.insert(j, m.vertex.size() - 1);
             }
         }
-
     advance_front_on_plane(m, path);
-//    for (int i = 1; i < path.size() - 1; i++) {
-//        Triangle t;
-//        t.vertex_index[0] = path[0];
-//        t.vertex_index[1] = path[i];
-//        t.vertex_index[2] = path[(i + 1) % path.size()];
-//        t.texture_index[0] = 0;
-//        t.texture_index[1] = 0;
-//        t.texture_index[2] = 0;
-//        o.face.push_back(t);
-//    }
+    m.update();
+}
+
+
+void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
+    list<int> path;
+    get_max_border_path_by_plane(m, p, path);
+    Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
+    cout << inner_orientation.x[0] << ' '
+        << inner_orientation.x[1] << ' '
+        << inner_orientation.x[2] << endl;
+    int sz = path.size();
+    while (path.size() > 2) {
+        for (list<int>::iterator i = path.begin(); i != path.end(); ) {
+            list<int>::iterator j = prev<list<int> >(path, i);
+            list<int>::iterator k = next<list<int> >(path, i);
+            Point3f& u = m.vertex[*j];
+            Point3f& v = m.vertex[*i];
+            Point3f& w = m.vertex[*k];
+            // uvw is a valid triangle
+            // iff uvw < 180 degree
+            // and no other vertex on path lies inside uvw
+            // and uvw is a triangle
+            bool convex = cross_product(v - u, w - v) * inner_orientation > eps;
+            if (!convex) {
+                cout << "Vertex " << *i << "(" << v.x[0] << ' ' << v.x[1] << ' ' << v.x[2] << ") concave" << endl;
+                ++i;
+                continue;
+            }
+            bool triangle = cross_product(u - v, w - v).length() > eps;
+            if (!triangle) {
+                cout << "Vertex " << *i << "(" << v.x[0] << ' ' << v.x[1] << ' ' << v.x[2] << ") trivial" << endl;
+                ++i;
+                continue;
+            }
+            bool inside = false;
+            for (list<int>::iterator p = path.begin(); p != path.end(); ++p)
+                if (p != i && p != j && p != k && is_inside_triangle(u, v, w, m.vertex[*p])) {
+                    inside = true;
+                    break;
+                }
+            if (inside) {
+                cout << "Vertex " << *i << "(" << v.x[0] << ' ' << v.x[1] << ' ' << v.x[2] << ") inside" << endl;
+                ++i;
+                continue;
+            }
+            m.face.push_back(Face(*i, *j, *k));
+            i = path.erase(i);
+        }
+        if (path.size() == sz) {
+            DEBUG()
+            break;
+        }
+        sz = path.size();
+        cout << endl;
+    }
     m.update();
 }

@@ -13,6 +13,7 @@ inline Point3f operator+(float other, const Point3f& self);
 inline Point3f operator+(const Point3f& self, float other);
 inline Point3f operator-(const Point3f& self, const Point3f& other);
 inline Point3f operator-(const Point3f& self, float other);
+inline Point3f operator-(const Point3f& self);
 inline float operator*(const Point3f& self, const Point3f& other);
 inline Point3f operator*(const Point3f& self, float other);
 inline Point3f operator*(float other, const Point3f& self);
@@ -119,6 +120,13 @@ inline Point3f operator-(const Point3f& self, float other) {
     ret -= other;
     return ret;
 }
+inline Point3f operator-(const Point3f& self) {
+    Point3f ret;
+    ret.x[0] = -self.x[0];
+    ret.x[1] = -self.x[1];
+    ret.x[2] = -self.x[2];
+    return ret;
+}
 inline float operator*(const Point3f& self, const Point3f& other) {
     return self.x[0] * other.x[0] + self.x[1] * other.x[1] + self.x[2] * other.x[2];
 }
@@ -154,6 +162,7 @@ inline Point2f operator+(const Point2f& self, float other);
 inline Point2f operator+(float other, const Point2f& self);
 inline Point2f operator-(const Point2f& self, const Point2f& other);
 inline Point2f operator-(const Point2f& self, float other);
+inline Point2f operator-(const Point2f& self);
 inline float operator*(const Point2f& self, const Point2f& other);
 inline Point2f operator*(const Point2f& self, float other);
 inline Point2f operator*(float other, const Point2f& self);
@@ -248,6 +257,12 @@ inline Point2f operator-(const Point2f& self, const Point2f& other) {
 inline Point2f operator-(const Point2f& self, float other) {
     Point2f ret(self);
     ret -= other;
+    return ret;
+}
+inline Point2f operator-(const Point2f& self) {
+    Point2f ret;
+    ret.x[0] = self.x[0];
+    ret.x[1] = self.x[1];
     return ret;
 }
 inline float operator*(const Point2f& self, const Point2f& other) {
