@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <cmath>
+#include <iostream>
 
 #include "base.h"
 
@@ -284,6 +285,16 @@ inline Point2f operator/(const Point2f& self, float other) {
 
 inline float cos(const Point2f& self, const Point2f& other) {
     return self * other / self.length() / other.length();
+}
+
+inline std::ostream& operator<<(std::ostream& out, const Point3f& self) {
+    out << self.x[0] << ' ' << self.x[1] << ' ' << self.x[2];
+    return out;
+}
+
+inline std::ostream& operator<<(std::ostream& out, const Point2f& self) {
+    out << self.x[0] << ' ' << self.x[1];
+    return out;
 }
 
 #endif

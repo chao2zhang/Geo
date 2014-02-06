@@ -1,7 +1,7 @@
 #ifndef BASE_H
 #define BASE_H
 
-const float eps = 0.00001;
+const float eps = 1e-5;
 
 #define DEBUGGABLE
 

@@ -19,6 +19,7 @@ using std::cerr;
 using std::endl;
 using std::iterator_traits;
 using std::next;
+using std::isnan;
 
 template<typename T>
 inline static typename T::iterator next(T& collection, typename T::iterator it) {
@@ -73,6 +74,39 @@ inline static V standard_deviation(const T& collection) {
     return sqrt(val / collection.size());
 }
 
+template<typename T, typename V = typename iterator_traits<typename T::const_iterator>::value_type>
+inline static V filtered_average(const T& collection) {
+    V val = 0;
+    V avg = average(collection);
+    V sdv = standard_deviation(collection);
+    V upper_limit = avg + 2 * sdv;
+    V lower_limit = avg - 2 * sdv;
+    for (const V& v: collection)
+        if (lower_limit < v && v < upper_limit)
+            val += v;
+    return val / collection.size();
+}
+
+template<typename T, typename V = typename iterator_traits<typename T::const_iterator>::value_type>
+inline static V filtered_standard_deviation(const T& collection) {
+    V val = 0;
+    V avg = average(collection);
+    V sdv = standard_deviation(collection);
+    V upper_limit = avg + 2 * sdv;
+    V lower_limit = avg - 2 * sdv;
+    for (const V& v: collection)
+        if (lower_limit < v && v < upper_limit)
+            val += (v - avg) * (v - avg);
+    return sqrt(val / collection.size());
+}
+
+inline static float safe_acos(float x) {
+    if (x > 1 - eps)
+        return 0;
+    if (x < -1 + eps)
+        return PI;
+    return acos(x);
+}
 
 inline static void get_texture_with_edge(const Mesh& m, int u, int v, int& tu, int& tv) {
     for (int i = 0; i < m.faces_of_vertex[u].size(); ++i) {
@@ -826,10 +860,8 @@ void mesh_offset(Mesh& m, float offset) {
 void remove_face_by_plane(Mesh& m, const Plane& p) {
     vector<bool> is_vertex_on_plane(m.vertex.size(), false);
     for (int i = 0; i < m.vertex.size(); ++i) {
-        if (fabs(get_value_on_plane(m.vertex[i], p)) < eps) {
+        if (fabs(get_value_on_plane(m.vertex[i], p)) < eps)
             is_vertex_on_plane[i] = true;
-            cout << "Vertex on plane: " << i << endl;
-        }
     }
     vector<Face> face;
     for (int i = 0; i < m.face.size(); ++i) {
@@ -875,6 +907,10 @@ Point3f get_orientation_vector_of_path_on_plane(const Mesh& m, const list<int>& 
                                           m.vertex[*k] - m.vertex[*i]);
         ++i;
     } while (inner_orientation.length() < eps);
+    cout << "Inner orientation = "
+        << inner_orientation.x[0] << ' '
+        << inner_orientation.x[1] << ' '
+        << inner_orientation.x[2] << endl;
     i = path.begin();
     float inner_sum = 0;
     while (i != path.end()) {
@@ -882,16 +918,15 @@ Point3f get_orientation_vector_of_path_on_plane(const Mesh& m, const list<int>& 
         list<int>::const_iterator k = next<list<int> >(path, i);
         Point3f&& a = m.vertex[*i] - m.vertex[*j];
         Point3f&& b = m.vertex[*k] - m.vertex[*i];
-        float angle = acosf(cos(a, b));
+        float angle = safe_acos(cos(a, b));
         if (cross_product(a, b) * inner_orientation > 0)
             inner_sum += angle;
         else
             inner_sum -= angle;
         ++i;
     }
-
-    cout << "inner_sum: " << inner_sum << endl;
     // inner_sum must be +2PI or -2PI
+    cout << "Inner sum = " << inner_sum << endl;
     if (inner_sum > 0)
         return inner_orientation.normalize();
     else
@@ -901,11 +936,10 @@ Point3f get_orientation_vector_of_path_on_plane(const Mesh& m, const list<int>& 
 void advance_front_on_plane(Mesh& m, list<int> path) {
     DEBUG()
     Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
-    cout << inner_orientation.x[0] << ' ' << inner_orientation.x[1] << ' ' << inner_orientation.x[2] << endl;
     list<int>::iterator i = path.begin();
     while (i != path.end()) {
-        list<int>::iterator j = prev<list<int> >(path, i);
-        list<int>::iterator k = next<list<int> >(path, i);
+        list<int>::iterator j = prev(path, i);
+        list<int>::iterator k = next(path, i);
         Point3f& u = m.vertex[*j];
         Point3f& v = m.vertex[*i];
         Point3f& w = m.vertex[*k];
@@ -917,12 +951,14 @@ void advance_front_on_plane(Mesh& m, list<int> path) {
         b.normalize();
         float cos_value = a * b;
         bool convex = cross_product(-a, b) * inner_orientation > eps;
-        // link u and w when cos in (0, 75)
-        // add a new point when cos in (75, 135)
-        // add a regular triangle when cos in (135, 180)
+        // link u and w when cos in (0, 90)
+        // add a new point when cos in (90, 120)
+        // add a regular triangle when cos in (120, 360)
         if (convex && cos_value > 0) {
             m.face.push_back(Face(*j, *i, *k));
             i = path.erase(i);
+            if (i++ == path.end())
+                break;
         } else if (convex && cos_value > -COS_60) {
             Point3f&& p = v + ((a + b).normalize() * (la + lb) / 2);
             m.vertex.push_back(p);
@@ -930,7 +966,8 @@ void advance_front_on_plane(Mesh& m, list<int> path) {
             m.face.push_back(Face(m.vertex.size() - 1, *i, *k));
             path.insert(i, m.vertex.size() - 1);
             i = path.erase(i);
-            ++i;
+            if (i++ == path.end())
+                break;
         } else {
             Point3f&& mid_vert = cross_product(a, inner_orientation);
             mid_vert.normalize();
@@ -939,6 +976,8 @@ void advance_front_on_plane(Mesh& m, list<int> path) {
             m.vertex.push_back(p);
             m.face.push_back(Face(*j, *i, m.vertex.size() - 1));
             path.insert(i, m.vertex.size() - 1);
+            if (i++ == path.end())
+                break;
         }
     }
 }
@@ -951,26 +990,32 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
     // Split edge
     list<float> length;
     for (list<int>::const_iterator i = path.begin(); i != path.end(); ++i) {
-        list<int>::const_iterator j = next<list<int> >(path, i);
+        list<int>::const_iterator j = next(path, i);
         length.push_back((m.vertex[*i] - m.vertex[*j]).length());
     }
-    float avg_length = average(length);
-    float std_dev_length = standard_deviation(length);
+    float avg_length = filtered_average(length);
+    float std_dev_length = filtered_standard_deviation(length);
+    cout << "Avg length = " << avg_length << endl;
+    cout << "Std dev length = " << std_dev_length << endl;
     list<int>::iterator i = path.begin();
     list<float>::iterator k = length.begin();
     for (;i != path.end(); ++i, ++k)
-        if (*k > avg_length + 2 * std_dev_length) {
-            cout << "Length at vertex " << *i << " is too long" << endl;
+        if (*k > avg_length * 1.5) {
             int num_to_add = floor(*k / avg_length);
-            list<int>::iterator j = next<list<int> >(path, i);
+            cout << "num_to_add=" << num_to_add << endl;
+            list<int>::iterator j = next(path, i);
+            list<float>::iterator l = next(length, k);
             Point3f&& unit = (m.vertex[*j] - m.vertex[*i]) / (num_to_add + 1);
+            float unit_length = unit.length();
+            *k = unit_length;
             for (int n = 1; n <= num_to_add; ++n) {
                 m.vertex.push_back(m.vertex[*i] + unit * n);
                 path.insert(j, m.vertex.size() - 1);
+                length.insert(l, unit_length);
             }
         }
     advance_front_on_plane(m, path);
-    m.update();
+    m.update(false);
 }
 
 
@@ -981,7 +1026,7 @@ void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
     cout << inner_orientation.x[0] << ' '
         << inner_orientation.x[1] << ' '
         << inner_orientation.x[2] << endl;
-    int sz = path.size();
+    int last_size = path.size();
     while (path.size() > 2) {
         for (list<int>::iterator i = path.begin(); i != path.end(); ) {
             list<int>::iterator j = prev<list<int> >(path, i);
@@ -1001,7 +1046,6 @@ void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
             }
             bool triangle = cross_product(u - v, w - v).length() > eps;
             if (!triangle) {
-                cout << "Vertex " << *i << "(" << v.x[0] << ' ' << v.x[1] << ' ' << v.x[2] << ") trivial" << endl;
                 ++i;
                 continue;
             }
@@ -1012,19 +1056,17 @@ void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
                     break;
                 }
             if (inside) {
-                cout << "Vertex " << *i << "(" << v.x[0] << ' ' << v.x[1] << ' ' << v.x[2] << ") inside" << endl;
                 ++i;
                 continue;
             }
             m.face.push_back(Face(*i, *j, *k));
             i = path.erase(i);
         }
-        if (path.size() == sz) {
-            DEBUG()
+        if (path.size() == last_size) {
+            cout << "Brute-force fill failed" << endl;
             break;
         }
-        sz = path.size();
-        cout << endl;
+        last_size = path.size();
     }
     m.update();
 }
