@@ -59,9 +59,9 @@ int main(int argc, char** argv) {
     fill_max_border_face_by_plane(m, Plane(0.586, 0.980, -0.993, 1.1));
     END_TIME("Executing filling...")
 
-//    START_TIME("Executing unify normals...")
-//    unify_face_normals(m);
-//    END_TIME("Executing unify normals...")
+    START_TIME("Executing unify normals...")
+    unify_face_normals(m);
+    END_TIME("Executing unify normals...")
 
     START_TIME("Writing...")
     m.save(out);

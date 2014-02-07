@@ -21,6 +21,17 @@ using std::iterator_traits;
 using std::next;
 using std::isnan;
 
+/**
+ * Tell if Set {a, b} intersects with Set {c, d}
+ */
+template <typename T>
+inline static bool is_set_intersected(T a, T b, T c, T d) {
+    return a == c || b == d || a == d || b == c;
+}
+
+/**
+ * Circular list function begin
+ */
 template<typename T>
 inline static typename T::iterator next(T& collection, typename T::iterator it) {
     typename T::iterator r(it);
@@ -56,6 +67,10 @@ inline static typename T::const_iterator prev(const T& collection, typename T::c
     --r;
     return r;
 }
+
+/**
+ * Circular list end
+ */
 
 template<typename T, typename V = typename iterator_traits<typename T::const_iterator>::value_type>
 inline static V average(const T& collection) {
@@ -134,7 +149,9 @@ inline static void get_texture_with_vertex(const Mesh& m, int u, int &tu) {
 }
 
 
-// Find ret on Plane p and Line xy
+/**
+ * Find ret on Plane p and Line xy
+ */
 inline static Point3f get_intersect_point(const Point3f& x, const Point3f& y, const Plane& p) {
     float f = (p.a * x.x[0] + p.b * x.x[1] + p.c * x.x[2] + p.d) /
               (p.a * (x.x[0] - y.x[0]) + p.b * (x.x[1] - y.x[1]) + p.c * (x.x[2] - y.x[2]));
@@ -149,7 +166,7 @@ inline static float get_value_on_plane(const Point3f& x, const Plane& p) {
     return p.a * x.x[0] + p.b * x.x[1] + p.c * x.x[2] + p.d;
 }
 
-/*
+/**
  * Find Point r on Line xy satisfying that Line xy is vertical to Line rp
  */
 inline static Point3f get_vertical_point(const Point3f& x, const Point3f& y, const Point3f& p) {
@@ -162,7 +179,7 @@ inline static Point3f get_vertical_point(const Point3f& x, const Point3f& y, con
     return r;
 }
 
-/*
+/**
  * Find Point r on Plane p that Line xr is vertical to Plane p
  */
 inline static Point3f get_vertical_point(const Point3f& x, const Plane& p) {
@@ -174,7 +191,7 @@ inline static Point3f get_vertical_point(const Point3f& x, const Plane& p) {
     return r;
 }
 
-/*
+/**
  * Calculate cosin value of dihedral angle between (x, y, a) and (x, y, b)
  */
 inline static float get_dihedral_angle_cosin(const Point3f& x, const Point3f& y, const Point3f& a, const Point3f& b) {
@@ -183,7 +200,7 @@ inline static float get_dihedral_angle_cosin(const Point3f& x, const Point3f& y,
     return va * vb / va.length() / vb.length();
 }
 
-/*
+/**
  * (u, v) is the shared edge of Face f and Face g
  * (u, v, rf) constitute Face f
  * (u, v, rg) constitute Face g
@@ -210,7 +227,7 @@ inline static void get_shared_edge(const Mesh& m, int f, int g, int& u, int& v, 
         rg = m.face[g].vertex_index[2];
 }
 
-/*
+/**
  * Tell if Point p lies inside triangle xyz
  */
 inline static bool is_inside_triangle(const Point3f& x, const Point3f& y, const Point3f& z, const Point3f& p) {
@@ -234,6 +251,10 @@ inline static bool is_less_than_bounding_box_along_axis(const Mesh& m, const Poi
         p.x[axis] < m.vertex[m.face[f].vertex_index[2]].x[axis];
 }
 
+inline static bool is_less_than_bounding_box_along_axis(const Point3f& x, const Point3f& y, const Point3f& p, int axis) {
+    return p.x[axis] < x.x[axis] && p.x[axis] < y.x[axis];
+}
+
 inline static bool is_more_than_bounding_box_along_axis(const Mesh& m, const Point3f& p, int f, int axis) {
     return
         p.x[axis] > m.vertex[m.face[f].vertex_index[0]].x[axis] &&
@@ -241,10 +262,42 @@ inline static bool is_more_than_bounding_box_along_axis(const Mesh& m, const Poi
         p.x[axis] > m.vertex[m.face[f].vertex_index[2]].x[axis];
 }
 
-/*
+inline static bool is_more_than_bounding_box_along_axis(const Point3f& x, const Point3f& y, const Point3f& p, int axis) {
+    return p.x[axis] > x.x[axis] && p.x[axis] > y.x[axis];
+}
+
+/**
+ * Tell if Line xy intersects with Line pq
+ */
+inline static bool is_intersected(const Point3f& x, const Point3f& y, const Point3f& p, const Point3f& q) {
+    if (is_less_than_bounding_box_along_axis(x, y, p, 0) &&
+        is_less_than_bounding_box_along_axis(x, y, q, 0))
+        return false;
+    if (is_less_than_bounding_box_along_axis(x, y, p, 1) &&
+        is_less_than_bounding_box_along_axis(x, y, q, 1))
+        return false;
+    if (is_less_than_bounding_box_along_axis(x, y, p, 2) &&
+        is_less_than_bounding_box_along_axis(x, y, q, 2))
+        return false;
+    if (is_more_than_bounding_box_along_axis(x, y, p, 0) &&
+        is_more_than_bounding_box_along_axis(x, y, q, 0))
+        return false;
+    if (is_more_than_bounding_box_along_axis(x, y, p, 1) &&
+        is_more_than_bounding_box_along_axis(x, y, q, 1))
+        return false;
+    if (is_more_than_bounding_box_along_axis(x, y, p, 2) &&
+        is_more_than_bounding_box_along_axis(x, y, q, 2))
+        return false;
+    if (cross_product(y - x, p - x).normalize() * cross_product(y - x, q - x).normalize() > 0)
+        return false;
+    if (cross_product(q - p, x - p).normalize() * cross_product(q - p, y - p).normalize() > 0)
+        return false;
+    return true;
+}
+/**
  * Tell if Line xy intersects with Face f
  */
-inline static bool is_intersect(const Mesh& m, const Point3f& x, const Point3f& y, int f) {
+inline static bool is_intersected(const Mesh& m, const Point3f& x, const Point3f& y, int f) {
     // Acceleration:
     // If Line xy is outside the bounding box of Face f,
     // it cannot intersect with the face.
@@ -280,7 +333,7 @@ inline static bool is_intersect(const Mesh& m, const Point3f& x, const Point3f& 
                               i);
 }
 
-/*
+/**
  * If the winding of Face f is correct, tell if the winding of Face g is correct.
  * CONDITION: Face f should be adjacent to Face g.
  */
@@ -296,8 +349,8 @@ inline static bool is_correct_winding(Mesh& m, int f, int g) {
     return (fx + 1 == fy || fx - 2 == fy) == (gx + 1 == gy || gx - 2 == gy);
 }
 
-/*
- * Tell if Vertex v is a vertex on border of Mesh O
+/**
+ * Tell if Vertex v is a vertex on border of Mesh m
  */
 inline static bool is_border_vertex(const Mesh& m, int v) {
     return m.faces_of_vertex[v].size() < m.adj_vertex[v].size();
@@ -310,7 +363,7 @@ inline static bool is_border_edge(const Mesh& m, int u, int v) {
     return count == 1;
 }
 
-/*
+/**
  * If the orientation of a vertex normal is inconsistent with all face normals, the normal is not valid.
  */
 inline static bool is_vertex_normal_valid(const Mesh& m, int v) {
@@ -320,7 +373,7 @@ inline static bool is_vertex_normal_valid(const Mesh& m, int v) {
     return true;
 }
 
-/*
+/**
  * If any vertex appears twice or more in the face, the face is degenerated.
  */
 inline static bool is_degenerate_face(const Face& f) {
@@ -329,23 +382,16 @@ inline static bool is_degenerate_face(const Face& f) {
          || f.vertex_index[2] == f.vertex_index[0]);
 }
 
-/*
+/**
  * If two triangle share a vertex, they should not be considered in self-intersection
  */
 inline static bool is_face_overlap(const Face& f, const Face& g) {
-    return (f.vertex_index[0] == g.vertex_index[0]
-         || f.vertex_index[0] == g.vertex_index[1]
-         || f.vertex_index[0] == g.vertex_index[2]
-         || f.vertex_index[1] == g.vertex_index[0]
-         || f.vertex_index[1] == g.vertex_index[1]
-         || f.vertex_index[1] == g.vertex_index[2]
-         || f.vertex_index[2] == g.vertex_index[0]
-         || f.vertex_index[2] == g.vertex_index[1]
-         || f.vertex_index[2] == g.vertex_index[2]
-            );
+    return f.has_vertex(g.vertex_index[0])
+        || f.has_vertex(g.vertex_index[1])
+        || f.has_vertex(g.vertex_index[2]);
 }
 
-/*
+/**
  * Reverse face normal orientation
  */
 void reverse_face_orientation(Mesh& m, int f) {
@@ -353,7 +399,7 @@ void reverse_face_orientation(Mesh& m, int f) {
     swap(m.face[f].texture_index[0], m.face[f].texture_index[1]);
     m.face_normal[f] *= -1;
 }
-/*
+/**
  * Face f is the face with correct normal orientation,
  * while Face g is the face with possibly wrong normal orientation.
  */
@@ -364,7 +410,7 @@ bool correct_winding(Mesh& m, int f, int g) {
     return answer;
 }
 
-/*
+/**
  * Generate vertices at the border.
  */
 void gen_border_vertex(const Mesh& m, vector<bool>& is_border) {
@@ -373,7 +419,7 @@ void gen_border_vertex(const Mesh& m, vector<bool>& is_border) {
             is_border[i] = true;
 }
 
-/*
+/**
  * Generate the graph of only edges at border.
  */
 void gen_border_graph(const Mesh& m, vector<vector<int> >& adj_vertex) {
@@ -387,7 +433,7 @@ void gen_border_graph(const Mesh& m, vector<vector<int> >& adj_vertex) {
                 }
 }
 
-/*
+/**
  * Modified Euler circuit algorithm.
  *
  * Instead of finding a euler circuit, find its sub-circuit where no vertex is visited twice.
@@ -683,7 +729,7 @@ void gen_offset_invalid_vertex(const Mesh& m, const Mesh& n, float offset, vecto
             continue;
         }
         for (int j = 0; j < m.face.size(); ++j)
-            if (is_intersect(m, m.vertex[i], n.vertex[i], j) && !m.face[j].has_vertex(i)) {
+            if (is_intersected(m, m.vertex[i], n.vertex[i], j) && !m.face[j].has_vertex(i)) {
                 cout << "Intersect: Vertex " << i << " and Face " << j << endl;
                 is_invalid[i] = true;
                 break;
@@ -753,9 +799,9 @@ void detect_self_intersect(const Mesh& m, vector<bool>& is_int) {
     for (int i = 0; i < m.face.size(); ++i)
         for (int j = 0; j < m.face.size(); ++j)
             if (!is_int[j] && !is_face_overlap(m.face[i], m.face[j])) {
-                if (is_intersect(m, m.vertex[m.face[j].vertex_index[0]], m.vertex[m.face[j].vertex_index[1]], i)
-                 || is_intersect(m, m.vertex[m.face[j].vertex_index[1]], m.vertex[m.face[j].vertex_index[2]], i)
-                 || is_intersect(m, m.vertex[m.face[j].vertex_index[2]], m.vertex[m.face[j].vertex_index[0]], i)) {
+                if (is_intersected(m, m.vertex[m.face[j].vertex_index[0]], m.vertex[m.face[j].vertex_index[1]], i)
+                 || is_intersected(m, m.vertex[m.face[j].vertex_index[1]], m.vertex[m.face[j].vertex_index[2]], i)
+                 || is_intersected(m, m.vertex[m.face[j].vertex_index[2]], m.vertex[m.face[j].vertex_index[0]], i)) {
                     is_int[i] = true;
                     is_int[j] = true;
                     break;
@@ -907,10 +953,6 @@ Point3f get_orientation_vector_of_path_on_plane(const Mesh& m, const list<int>& 
                                           m.vertex[*k] - m.vertex[*i]);
         ++i;
     } while (inner_orientation.length() < eps);
-    cout << "Inner orientation = "
-        << inner_orientation.x[0] << ' '
-        << inner_orientation.x[1] << ' '
-        << inner_orientation.x[2] << endl;
     i = path.begin();
     float inner_sum = 0;
     while (i != path.end()) {
@@ -933,10 +975,35 @@ Point3f get_orientation_vector_of_path_on_plane(const Mesh& m, const list<int>& 
         return -inner_orientation.normalize();
 }
 
-void advance_front_on_plane(Mesh& m, list<int> path) {
-    DEBUG()
+bool is_intersected_with_path(const Mesh& m, const list<int>& path, const Face& f) {
+
+    for (list<int>::const_iterator i = path.begin(); i != path.end(); ++i) {
+        list<int>::const_iterator j = next(path, i);
+        if (is_intersected(m.vertex[f.vertex_index[0]],
+                         m.vertex[f.vertex_index[1]],
+                         m.vertex[*i],
+                         m.vertex[*j]) &&
+            !is_set_intersected(f.vertex_index[0], f.vertex_index[1], *i, *j))
+            return true;
+        if (is_intersected(m.vertex[f.vertex_index[1]],
+                         m.vertex[f.vertex_index[2]],
+                         m.vertex[*i], m.vertex[*j]) &&
+            !is_set_intersected(f.vertex_index[1], f.vertex_index[2], *i, *j))
+            return true;
+        if (is_intersected(m.vertex[f.vertex_index[2]],
+                         m.vertex[f.vertex_index[0]],
+                         m.vertex[*i], m.vertex[*j]) &&
+            !is_set_intersected(f.vertex_index[2], f.vertex_index[0], *i, *j))
+            return true;
+    }
+    return false;
+}
+
+void advance_front_on_plane(Mesh& m, list<int>& path) {
     Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
     list<int>::iterator i = path.begin();
+    if (path.size() <= 2)
+        return;
     while (i != path.end()) {
         list<int>::iterator j = prev(path, i);
         list<int>::iterator k = next(path, i);
@@ -951,34 +1018,76 @@ void advance_front_on_plane(Mesh& m, list<int> path) {
         b.normalize();
         float cos_value = a * b;
         bool convex = cross_product(-a, b) * inner_orientation > eps;
-        // link u and w when cos in (0, 90)
-        // add a new point when cos in (90, 120)
-        // add a regular triangle when cos in (120, 360)
+        char condition;
+        // link u and w when angle in (0, 90)
+        // add a new point when angle in (90, 120)
+        // add a regular triangle when angle in (120, 360)
         if (convex && cos_value > 0) {
-            m.face.push_back(Face(*j, *i, *k));
-            i = path.erase(i);
-            if (i++ == path.end())
-                break;
+            condition = 'A';
+            Face f(*j, *i, *k);
+            if (!is_intersected_with_path(m, path, f)) {
+                m.face.push_back(f);
+                i = path.erase(i);
+            }
         } else if (convex && cos_value > -COS_60) {
+            condition = 'B';
             Point3f&& p = v + ((a + b).normalize() * (la + lb) / 2);
             m.vertex.push_back(p);
-            m.face.push_back(Face(*j, *i, m.vertex.size() - 1));
-            m.face.push_back(Face(m.vertex.size() - 1, *i, *k));
-            path.insert(i, m.vertex.size() - 1);
-            i = path.erase(i);
-            if (i++ == path.end())
-                break;
+            Face f(*j, *i, m.vertex.size() - 1);
+            Face g(m.vertex.size() - 1, *i, *k);
+            bool is_valid_f = !is_intersected_with_path(m, path, f);
+            bool is_valid_g = !is_intersected_with_path(m, path, g);
+            if (is_valid_f)
+                m.face.push_back(f);
+            if (is_valid_g)
+                m.face.push_back(g);
+            if (is_valid_f && is_valid_g) {
+                path.insert(i, m.vertex.size() - 1);
+                i = path.erase(i);
+            } else if (is_valid_f) {
+                path.insert(i, m.vertex.size() - 1);
+            } else if (is_valid_g) {
+                path.insert(k, m.vertex.size() - 1);
+            }
         } else {
+            condition = 'C';
             Point3f&& mid_vert = cross_product(a, inner_orientation);
             mid_vert.normalize();
             Point3f&& mid_point = (u + v) / 2;
             Point3f&& p = mid_point + mid_vert * COS_30 * la;
             m.vertex.push_back(p);
-            m.face.push_back(Face(*j, *i, m.vertex.size() - 1));
-            path.insert(i, m.vertex.size() - 1);
-            if (i++ == path.end())
-                break;
+            Face f(*j, *i, m.vertex.size() - 1);
+            if (!is_intersected_with_path(m, path, f)) {
+                m.face.push_back(f);
+                path.insert(i, m.vertex.size() - 1);
+            }
         }
+        if (i++ == path.end())
+            break;
+    }
+}
+
+void fix_front_on_plane(Mesh& m, list<int>& path, const list<int>& reference_path) {
+    Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
+    if (path.size() <= 2)
+        return;
+    for (list<int>::iterator i = path.begin(); i != path.end(); ) {
+        list<int>::iterator j = prev(path, i);
+        list<int>::iterator k = next(path, i);
+        Point3f& u = m.vertex[*j];
+        Point3f& v = m.vertex[*i];
+        Point3f& w = m.vertex[*k];
+        Point3f&& a = u - v;
+        Point3f&& b = w - v;
+        a.normalize();
+        b.normalize();
+        Face f(*j, *i, *k);
+        // link u and w when angle in (0, 180)
+        if (cross_product(-a, b) * inner_orientation > eps && !is_intersected_with_path(m, path, f)) {
+            m.face.push_back(f);
+            i = path.erase(i);
+        } else
+            ++i;
     }
 }
 
@@ -1002,7 +1111,6 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
     for (;i != path.end(); ++i, ++k)
         if (*k > avg_length * 1.5) {
             int num_to_add = floor(*k / avg_length);
-            cout << "num_to_add=" << num_to_add << endl;
             list<int>::iterator j = next(path, i);
             list<float>::iterator l = next(length, k);
             Point3f&& unit = (m.vertex[*j] - m.vertex[*i]) / (num_to_add + 1);
@@ -1014,7 +1122,17 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
                 length.insert(l, unit_length);
             }
         }
-    advance_front_on_plane(m, path);
+    for (int i = 0; i < 8; ++i) {
+        list<int> path_copy(path.begin(), path.end());
+        cout << "Iter=" << i * 3 << " Size=" << path_copy.size() << endl;
+        advance_front_on_plane(m, path_copy);
+        cout << "Iter=" << i * 3 + 1 << " Size=" << path_copy.size() << endl;
+        advance_front_on_plane(m, path_copy);
+        cout << "Iter=" << i * 3 + 2 << " Size=" << path_copy.size() << endl;
+        advance_front_on_plane(m, path_copy);
+        fix_front_on_plane(m, path_copy, path);
+        path = path_copy;
+    }
     m.update(false);
 }
 
@@ -1023,9 +1141,6 @@ void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
     list<int> path;
     get_max_border_path_by_plane(m, p, path);
     Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
-    cout << inner_orientation.x[0] << ' '
-        << inner_orientation.x[1] << ' '
-        << inner_orientation.x[2] << endl;
     int last_size = path.size();
     while (path.size() > 2) {
         for (list<int>::iterator i = path.begin(); i != path.end(); ) {
@@ -1040,7 +1155,6 @@ void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
             // and uvw is a triangle
             bool convex = cross_product(v - u, w - v) * inner_orientation > eps;
             if (!convex) {
-                cout << "Vertex " << *i << "(" << v.x[0] << ' ' << v.x[1] << ' ' << v.x[2] << ") concave" << endl;
                 ++i;
                 continue;
             }
