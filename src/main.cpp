@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     END_TIME("Counting spikes...");
 
 //    START_TIME("Executing laplacian HC smooth...")
-//    laplacian_smooth(m,5);
+//    laplacian_hc_smooth(m, 5);
 //    END_TIME("Executing laplacian HC smooth...")
 
     START_TIME("Executing positioning...")

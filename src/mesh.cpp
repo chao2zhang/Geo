@@ -139,12 +139,14 @@ void Mesh::calculate_vertex_normal() {
     }
 }
 
-void Mesh::update(bool clean) {
+void Mesh::clean() {
     DEBUG()
-    if (clean) {
-        remove_unused_vertex();
-        remove_unused_texture();
-    }
+    remove_unused_vertex();
+    remove_unused_texture();
+}
+
+void Mesh::update() {
+    DEBUG()
     calculate_adj_vertex();
     calculate_faces_of_vertex();
     calculate_adj_face();

@@ -3,9 +3,10 @@
 #include <vector>
 #include <list>
 #include <queue>
+#include <iterator>
 #include <utility>
 #include <cmath>
-#include <iterator>
+#include <cassert>
 #include <algorithm>
 
 using std::vector;
@@ -66,6 +67,11 @@ inline static typename T::const_iterator prev(const T& collection, typename T::c
         r = collection.end();
     --r;
     return r;
+}
+
+template<typename S, typename T>
+inline static int associative_compare(const pair<S, T>& left, const pair<S, T>& right) {
+    return left.first < right.first;
 }
 
 /**
@@ -411,6 +417,20 @@ bool correct_winding(Mesh& m, int f, int g) {
 }
 
 /**
+ * Merge Vertex u with Vertex v(replace all occurrences of v by u)
+ */
+void merge_vertex(Mesh& m, int u, int v) {
+    for (Face f : m.faces_of_vertex[v]) {
+        if (f.vertex_index[0] == v)
+            f.vertex_index[0] = u;
+        if (f.vertex_index[1] == v)
+            f.vertex_index[1] = u;
+        if (f.vertex_index[2] == v)
+            f.vertex_index[2] = u;
+    }
+}
+
+/**
  * Generate vertices at the border.
  */
 void gen_border_vertex(const Mesh& m, vector<bool>& is_border) {
@@ -471,31 +491,30 @@ void euler_simple_circuit(vector<int>& path, vector<vector<int> >& adj_vertex, i
     euler_simple_circuit(path, visited, adj_vertex, v, v);
 }
 
-void laplacian_smooth(Mesh& m, int times, float lambda) {
+void laplacian_smooth(Mesh& m, int times, bool reserve_border, float lambda) {
     vector<Point3f> p(m.vertex);
     for (int f = 0; f < times; ++f) {
         vector<Point3f> q(p);
         for (int i = 0; i < m.vertex.size(); ++i) {
-            if (m.adj_vertex[i].size()) {
+            if (m.adj_vertex[i].size() && m.adj_vertex[i].size() == m.faces_of_vertex[i].size()) {
                 Point3f s(0, 0, 0);
                 for (int j : m.adj_vertex[i])
                     s += q[j];
-                p[i] = lambda * s / m.adj_vertex[i].size();
+                p[i] = lambda * s / m.adj_vertex[i].size() + (1 - lambda) * p[i];
             }
         }
     }
     m.vertex.swap(p);
-    m.update();
 }
 
-void laplacian_hc_smooth(Mesh& m, int times, float alpha, float beta) {
+void laplacian_hc_smooth(Mesh& m, int times, bool reserve_border, float alpha, float beta) {
     vector<Point3f> o(m.vertex);
     vector<Point3f> p(o);
     for (int f = 0; f < times; ++f) {
         vector<Point3f> b(o.size());
         vector<Point3f> q(p);
         for (int i = 0; i < o.size(); ++i) {
-            if (m.adj_vertex[i].size()) {
+            if (m.adj_vertex[i].size() && m.adj_vertex[i].size() == m.faces_of_vertex[i].size()) {
                 Point3f s(0, 0, 0);
                 for (int j : m.adj_vertex[i])
                     s += q[j];
@@ -504,7 +523,7 @@ void laplacian_hc_smooth(Mesh& m, int times, float alpha, float beta) {
             b[i] = p[i] - (o[i] * alpha + q[i] * (1 - alpha));
         }
         for (int i = 0; i < o.size(); ++i) {
-            if (m.adj_vertex[i].size()) {
+            if (m.adj_vertex[i].size() && m.adj_vertex[i].size() == m.faces_of_vertex[i].size()) {
                 Point3f s(0, 0, 0);
                 for (int j : m.adj_vertex[i])
                     s += b[j];
@@ -513,7 +532,6 @@ void laplacian_hc_smooth(Mesh& m, int times, float alpha, float beta) {
         }
     }
     m.vertex.swap(p);
-    m.update();
 }
 
 void center_positioning_by_bounding_box(Mesh& m) {
@@ -626,6 +644,7 @@ void partition_by_plane(Mesh& m, const Plane& p) {
                 }
         }
     }
+    m.clean();
     m.update();
 }
 
@@ -888,7 +907,7 @@ void mesh_offset(Mesh& m, float offset) {
     n.texture = m.texture;
     gen_offset_invalid_vertex(m, n, offset, is_vertex_invalid);
     gen_offset_face(m, n, is_vertex_invalid);
-    n.update(false);
+    n.update();
     //vector<bool> face_invalid(n.face.size(), false);
     //detect_self_intersect(n, face_invalid);
     //vector<int> face_group(n.face.size(), 0);
@@ -899,6 +918,7 @@ void mesh_offset(Mesh& m, float offset) {
     //n.update(false);
     //fill_trivial_hole(n);
     enclose_offset_mesh(m, n, is_vertex_invalid);
+    m.clean();
     m.update();
     laplacian_hc_smooth(m,3);
 }
@@ -917,6 +937,7 @@ void remove_face_by_plane(Mesh& m, const Plane& p) {
             face.push_back(m.face[i]);
     }
     m.face.swap(face);
+    m.clean();
     m.update();
 }
 
@@ -976,7 +997,6 @@ Point3f get_orientation_vector_of_path_on_plane(const Mesh& m, const list<int>& 
 }
 
 bool is_intersected_with_path(const Mesh& m, const list<int>& path, const Face& f) {
-
     for (list<int>::const_iterator i = path.begin(); i != path.end(); ++i) {
         list<int>::const_iterator j = next(path, i);
         if (is_intersected(m.vertex[f.vertex_index[0]],
@@ -1000,94 +1020,77 @@ bool is_intersected_with_path(const Mesh& m, const list<int>& path, const Face& 
 }
 
 void advance_front_on_plane(Mesh& m, list<int>& path) {
-    Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
-    list<int>::iterator i = path.begin();
-    if (path.size() <= 2)
+    if (path.size() < 3)
         return;
-    while (i != path.end()) {
-        list<int>::iterator j = prev(path, i);
-        list<int>::iterator k = next(path, i);
-        Point3f& u = m.vertex[*j];
-        Point3f& v = m.vertex[*i];
-        Point3f& w = m.vertex[*k];
-        Point3f&& a = u - v;
-        Point3f&& b = w - v;
-        float la = a.length();
-        float lb = b.length();
-        a.normalize();
-        b.normalize();
-        float cos_value = a * b;
-        bool convex = cross_product(-a, b) * inner_orientation > eps;
-        char condition;
-        // link u and w when angle in (0, 90)
-        // add a new point when angle in (90, 120)
-        // add a regular triangle when angle in (120, 360)
-        if (convex && cos_value > 0) {
-            condition = 'A';
-            Face f(*j, *i, *k);
-            if (!is_intersected_with_path(m, path, f)) {
-                m.face.push_back(f);
-                i = path.erase(i);
-            }
-        } else if (convex && cos_value > -COS_60) {
-            condition = 'B';
-            Point3f&& p = v + ((a + b).normalize() * (la + lb) / 2);
-            m.vertex.push_back(p);
-            Face f(*j, *i, m.vertex.size() - 1);
-            Face g(m.vertex.size() - 1, *i, *k);
-            bool is_valid_f = !is_intersected_with_path(m, path, f);
-            bool is_valid_g = !is_intersected_with_path(m, path, g);
-            if (is_valid_f)
-                m.face.push_back(f);
-            if (is_valid_g)
-                m.face.push_back(g);
-            if (is_valid_f && is_valid_g) {
-                path.insert(i, m.vertex.size() - 1);
-                i = path.erase(i);
-            } else if (is_valid_f) {
-                path.insert(i, m.vertex.size() - 1);
-            } else if (is_valid_g) {
-                path.insert(k, m.vertex.size() - 1);
-            }
-        } else {
-            condition = 'C';
-            Point3f&& mid_vert = cross_product(a, inner_orientation);
-            mid_vert.normalize();
-            Point3f&& mid_point = (u + v) / 2;
-            Point3f&& p = mid_point + mid_vert * COS_30 * la;
-            m.vertex.push_back(p);
-            Face f(*j, *i, m.vertex.size() - 1);
-            if (!is_intersected_with_path(m, path, f)) {
-                m.face.push_back(f);
-                path.insert(i, m.vertex.size() - 1);
-            }
+    Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
+    int last_size = path.size();
+    bool success = true;
+    while (success && path.size() >= 3) {
+        success = false;
+        vector<pair<float, list<int>::iterator> > v;
+        for (list<int>::iterator i = path.begin(); i != path.end(); ++i) {
+            list<int>::iterator j = prev(path, i);
+            list<int>::iterator k = next(path, i);
+            Point3f a = (m.vertex[*j] - m.vertex[*i]).normalize();
+            Point3f b = (m.vertex[*k] - m.vertex[*i]).normalize();
+            float cos_value = a * b;
+            bool convex = cross_product(-a, b) * inner_orientation > eps;
+            if (!convex)
+                cos_value = -2 - cos_value;
+            v.push_back(pair<float, list<int>::iterator>(cos_value, i));
         }
-        if (i++ == path.end())
+        sort(v.begin(), v.end(), associative_compare<float, list<int>::iterator>);
+        for (auto it = v.rbegin(); it != v.rend(); ++it) {
+            list<int>::iterator i = it->second;
+            list<int>::iterator j = prev(path, i);
+            list<int>::iterator k = next(path, i);
+            Point3f& u = m.vertex[*j];
+            Point3f& v = m.vertex[*i];
+            Point3f& w = m.vertex[*k];
+            Point3f&& a = u - v;
+            Point3f&& b = w - v;
+            float la = a.length();
+            float lb = b.length();
+            a.normalize();
+            b.normalize();
+            if (it->first > COS_75) {
+                Face f(*j, *i, *k);
+                if (is_intersected_with_path(m, path, f))
+                    continue;
+                m.face.push_back(f);
+                path.erase(i);
+            } else if (it->first > -COS_45) {
+                Point3f&& p = v + ((a + b).normalize() * (la + lb) / 2);
+                m.vertex.push_back(p);
+                Face f(*j, *i, m.vertex.size() - 1);
+                Face g(m.vertex.size() - 1, *i, *k);
+                if (is_intersected_with_path(m, path, f) ||
+                    is_intersected_with_path(m, path, g))
+                    continue;
+                m.face.push_back(f);
+                m.face.push_back(g);
+                *i = m.vertex.size() - 1;
+            } else {
+                Point3f&& p = v + ((a + a + b).normalize() * (la + la + lb) / 2);
+                Point3f&& q = v + ((a + b + b).normalize() * (la + lb + lb) / 2);
+                m.vertex.push_back(p);
+                m.vertex.push_back(q);
+                Face f(*j, *i, m.vertex.size() - 2);
+                Face g(m.vertex.size() - 2, *i, m.vertex.size() - 1);
+                Face h(m.vertex.size() - 1, *i, *k);
+                if (is_intersected_with_path(m, path, f) ||
+                    is_intersected_with_path(m, path, g) ||
+                    is_intersected_with_path(m, path, h))
+                    continue;
+                m.face.push_back(f);
+                m.face.push_back(g);
+                m.face.push_back(h);
+                *i = m.vertex.size() - 1;
+                path.insert(i, m.vertex.size() - 2);
+            }
+            success = true;
             break;
-    }
-}
-
-void fix_front_on_plane(Mesh& m, list<int>& path, const list<int>& reference_path) {
-    Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
-    if (path.size() <= 2)
-        return;
-    for (list<int>::iterator i = path.begin(); i != path.end(); ) {
-        list<int>::iterator j = prev(path, i);
-        list<int>::iterator k = next(path, i);
-        Point3f& u = m.vertex[*j];
-        Point3f& v = m.vertex[*i];
-        Point3f& w = m.vertex[*k];
-        Point3f&& a = u - v;
-        Point3f&& b = w - v;
-        a.normalize();
-        b.normalize();
-        Face f(*j, *i, *k);
-        // link u and w when angle in (0, 180)
-        if (cross_product(-a, b) * inner_orientation > eps && !is_intersected_with_path(m, path, f)) {
-            m.face.push_back(f);
-            i = path.erase(i);
-        } else
-            ++i;
+        }
     }
 }
 
@@ -1109,8 +1112,8 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
     list<int>::iterator i = path.begin();
     list<float>::iterator k = length.begin();
     for (;i != path.end(); ++i, ++k)
-        if (*k > avg_length * 1.5) {
-            int num_to_add = floor(*k / avg_length);
+        if (*k > avg_length + 3 * std_dev_length) {
+            int num_to_add = floor(*k / (avg_length +  std_dev_length));
             list<int>::iterator j = next(path, i);
             list<float>::iterator l = next(length, k);
             Point3f&& unit = (m.vertex[*j] - m.vertex[*i]) / (num_to_add + 1);
@@ -1122,18 +1125,20 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
                 length.insert(l, unit_length);
             }
         }
-    for (int i = 0; i < 8; ++i) {
-        list<int> path_copy(path.begin(), path.end());
-        cout << "Iter=" << i * 3 << " Size=" << path_copy.size() << endl;
-        advance_front_on_plane(m, path_copy);
-        cout << "Iter=" << i * 3 + 1 << " Size=" << path_copy.size() << endl;
-        advance_front_on_plane(m, path_copy);
-        cout << "Iter=" << i * 3 + 2 << " Size=" << path_copy.size() << endl;
-        advance_front_on_plane(m, path_copy);
-        fix_front_on_plane(m, path_copy, path);
-        path = path_copy;
-    }
-    m.update(false);
+    int f = m.face.size();
+    // Main AFM
+    advance_front_on_plane(m, path);
+    // Shrink
+
+    // Smooth
+    Mesh n;
+    n.vertex = m.vertex;
+    n.texture = m.texture;
+    n.face.assign(m.face.begin() + f, m.face.end());
+    n.update();
+    laplacian_smooth(n, 3);
+    m.vertex = n.vertex;
+    m.update();
 }
 
 

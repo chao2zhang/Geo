@@ -6,8 +6,8 @@
 #include "plane.h"
 #include "mesh.h"
 
-void laplacian_hc_smooth(Mesh& m, int times=1, float alpha=0.1, float beta=0.6);
-void laplacian_smooth(Mesh& m, int times=1, float lambda=0.5);
+void laplacian_hc_smooth(Mesh& m, int times=1, bool reserver_border=true, float alpha=0.1, float beta=0.6);
+void laplacian_smooth(Mesh& m, int times=1, bool reserve_border=true, float lambda=0.5);
 void center_positioning_by_bounding_box(Mesh& m);
 void center_positioning_by_averaging_vertex(Mesh& m);
 void partition_by_plane(Mesh& m, const Plane& p);

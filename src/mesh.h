@@ -69,7 +69,8 @@ protected:
     void connect_vertex(int u, int v);
     void connect_face(int u, int v);
 public:
-    void update(bool clean=true);
+    void update();
+    void clean();
     void load(std::istream& in);
     void save(std::ostream& out);
 };
