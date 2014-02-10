@@ -2,6 +2,7 @@
 
 #include <ctime>
 #include <fstream>
+#include <algorithm>
 
 using std::istream;
 using std::ostream;
@@ -10,22 +11,21 @@ using std::cerr;
 using std::endl;
 using std::string;
 using std::istringstream;
+using std::find;
 
 void Mesh::connect_vertex(int u, int v) {
     if (u == v)
         return;
-    for (int i = 0; i < adj_vertex[u].size(); ++i)
-        if (adj_vertex[u][i] == v)
-            return;
+    if (find(adj_vertex[u].begin(), adj_vertex[u].end(), v) != adj_vertex[u].end())
+        return;
     adj_vertex[u].push_back(v);
 }
 
 void Mesh::connect_face(int u, int v) {
     if (u == v)
         return;
-    for (int i = 0; i < adj_face[u].size(); ++i)
-        if (adj_face[u][i] == v)
-            return;
+    if (find(adj_face[u].begin(), adj_face[u].end(), v) != adj_face[u].end())
+        return;
     adj_face[u].push_back(v);
 }
 

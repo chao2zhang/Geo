@@ -35,29 +35,29 @@ int main(int argc, char** argv) {
     center_positioning_by_averaging_vertex(m);
     END_TIME("Executing positioning...")
 
-//    START_TIME("Executing shell...")
-//    mesh_offset(m, -0.05);
-//    END_TIME("Executing shell...")
+//    START_TIME("Executing partitioning...")
+//    partition_by_plane(m, Plane(0.586, 0.980, -0.993, 1));
+//    END_TIME("Executing partitioning..")
+//
+//    START_TIME("Executing partitioning...")
+//    partition_by_plane(m, Plane(0.837, -0.234, 0.263, -0.8));
+//    END_TIME("Executing partitioning..")
+//
+//    START_TIME("Executing projecting...")
+//    project_by_plane(m, Plane(0.586, 0.980, -0.993, 1.1));
+//    END_TIME("Executing projecting...")
+//
+//    START_TIME("Executing removing...")
+//    remove_face_by_plane(m, Plane(0.837, -0.234, 0.263, -0.8));
+//    END_TIME("Executing removing...")
+//
+//    START_TIME("Executing filling...")
+//    fill_max_border_face_by_plane(m, Plane(0.586, 0.980, -0.993, 1.1));
+//    END_TIME("Executing filling...")
 
-    START_TIME("Executing partitioning...")
-    partition_by_plane(m, Plane(0.586, 0.980, -0.993, 1));
-    END_TIME("Executing partitioning..")
-
-    START_TIME("Executing partitioning...")
-    partition_by_plane(m, Plane(0.837, -0.234, 0.263, -0.8));
-    END_TIME("Executing partitioning..")
-
-    START_TIME("Executing projecting...")
-    project_by_plane(m, Plane(0.586, 0.980, -0.993, 1.1));
-    END_TIME("Executing projecting...")
-
-    START_TIME("Executing removing...")
-    remove_face_by_plane(m, Plane(0.837, -0.234, 0.263, -0.8));
-    END_TIME("Executing removing...")
-
-    START_TIME("Executing filling...")
-    fill_max_border_face_by_plane(m, Plane(0.586, 0.980, -0.993, 1.1));
-    END_TIME("Executing filling...")
+    START_TIME("Executing shell...")
+    mesh_offset(m, -0.1);
+    END_TIME("Executing shell...")
 
     START_TIME("Executing unify normals...")
     unify_face_normals(m);

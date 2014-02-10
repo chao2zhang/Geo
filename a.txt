@@ -1,0 +1,109 @@
+Loading...
+Loading...574ms
+Counting spikes...
+Detect 146/14871 spikes
+Counting spikes...1ms
+Executing positioning...
+Center: 0.446321 -0.0760342 2.96417
+Executing positioning...1ms
+Executing partitioning...
+Executing partitioning..66ms
+Executing partitioning...
+Executing partitioning..67ms
+Executing projecting...
+0 faces reverted
+Executing projecting...48ms
+Executing removing...
+Executing removing...93ms
+Executing filling...
+Avg length = 0.0373014
+Std dev length = 0.036807
+Inner sum = 6.2782
+0.0535556 0.0107111
+Merge 5185 5188
+Merge 5186 5185
+Merge 5187 5251
+Merge 5187 5319
+Merge 5189 5258
+Merge 5189 5550
+Merge 5189 5551
+Merge 5195 5196
+Merge 5197 5198
+Merge 5197 5200
+Merge 5199 5229
+Merge 5199 5232
+Merge 5230 5231
+Merge 5233 5242
+Merge 5233 5247
+Merge 5234 5235
+Merge 5234 5240
+Merge 5236 5237
+Merge 5236 5239
+Merge 5238 5241
+Merge 5238 5246
+Merge 5248 5253
+Merge 5248 5254
+Merge 5250 5256
+Merge 5250 5257
+Merge 5255 5324
+Merge 5255 5325
+Merge 5320 5327
+Merge 5320 5452
+Merge 5323 5571
+Merge 5323 5576
+Merge 5326 5565
+Merge 5326 5569
+Merge 5450 5563
+Merge 5459 5552
+Merge 5459 5553
+Merge 5459 5555
+Merge 5533 5534
+Merge 5533 5536
+Merge 5535 5533
+Merge 5535 5559
+Merge 5549 5554
+Merge 5556 5560
+Merge 5557 5614
+Merge 5557 5615
+Merge 5558 5535
+Merge 5562 5593
+Merge 5562 5616
+Merge 5567 5572
+Merge 5567 5580
+Merge 5570 5573
+Merge 5579 5582
+Merge 5589 5590
+Merge 5589 5594
+Merge 5591 5592
+Merge 5591 5621
+Merge 5598 5630
+Merge 5603 5644
+Merge 5603 5645
+Merge 5604 5603
+Merge 5604 5646
+Merge 5605 5657
+Merge 5613 5617
+Merge 5618 5619
+Merge 5622 5625
+Merge 5623 5626
+Merge 5624 5627
+Merge 5628 5633
+Merge 5643 5647
+Merge 5648 5656
+Merge 5654 5666
+Merge 5655 5654
+Merge 5836 5896
+Merge 5841 5904
+Merge 5874 5875
+Merge 5874 5878
+Merge 5876 5879
+Merge 5876 5881
+Merge 5882 5933
+Merge 5931 5936
+Merge 5935 6018
+Executing filling...156ms
+Executing unify normals...
+1779 faces reverted
+Executing unify normals...10ms
+Writing...
+Writing...935ms

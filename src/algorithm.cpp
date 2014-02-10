@@ -100,8 +100,8 @@ inline static V filtered_average(const T& collection) {
     V val = 0;
     V avg = average(collection);
     V sdv = standard_deviation(collection);
-    V upper_limit = avg + 2 * sdv;
-    V lower_limit = avg - 2 * sdv;
+    V upper_limit = avg + sdv;
+    V lower_limit = avg - sdv;
     for (const V& v: collection)
         if (lower_limit < v && v < upper_limit)
             val += v;
@@ -113,8 +113,8 @@ inline static V filtered_standard_deviation(const T& collection) {
     V val = 0;
     V avg = average(collection);
     V sdv = standard_deviation(collection);
-    V upper_limit = avg + 2 * sdv;
-    V lower_limit = avg - 2 * sdv;
+    V upper_limit = avg + sdv;
+    V lower_limit = avg - sdv;
     for (const V& v: collection)
         if (lower_limit < v && v < upper_limit)
             val += (v - avg) * (v - avg);
@@ -355,6 +355,14 @@ inline static bool is_correct_winding(Mesh& m, int f, int g) {
     return (fx + 1 == fy || fx - 2 == fy) == (gx + 1 == gy || gx - 2 == gy);
 }
 
+
+/**
+ * Tell if Vertex u is adjacent to Vertex v
+ */
+inline static bool is_adjacent(const Mesh& m, int u, int v) {
+    return find(m.adj_vertex[u].begin(), m.adj_vertex[u].end(), v) != m.adj_vertex[u].end();
+}
+
 /**
  * Tell if Vertex v is a vertex on border of Mesh m
  */
@@ -420,13 +428,17 @@ bool correct_winding(Mesh& m, int f, int g) {
  * Merge Vertex u with Vertex v(replace all occurrences of v by u)
  */
 void merge_vertex(Mesh& m, int u, int v) {
-    for (Face f : m.faces_of_vertex[v]) {
-        if (f.vertex_index[0] == v)
-            f.vertex_index[0] = u;
-        if (f.vertex_index[1] == v)
-            f.vertex_index[1] = u;
-        if (f.vertex_index[2] == v)
-            f.vertex_index[2] = u;
+    for (int f : m.faces_of_vertex[v]) {
+        if (m.face[f].vertex_index[0] == v)
+            m.face[f].vertex_index[0] = u;
+        if (m.face[f].vertex_index[1] == v)
+            m.face[f].vertex_index[1] = u;
+        if (m.face[f].vertex_index[2] == v)
+            m.face[f].vertex_index[2] = u;
+        // Partial update, remember to call update()
+        if (find(m.faces_of_vertex[u].begin(), m.faces_of_vertex[u].end(), f) ==
+                 m.faces_of_vertex[u].end())
+            m.faces_of_vertex[u].push_back(f);
     }
 }
 
@@ -908,19 +920,18 @@ void mesh_offset(Mesh& m, float offset) {
     gen_offset_invalid_vertex(m, n, offset, is_vertex_invalid);
     gen_offset_face(m, n, is_vertex_invalid);
     n.update();
-    //vector<bool> face_invalid(n.face.size(), false);
-    //detect_self_intersect(n, face_invalid);
-    //vector<int> face_group(n.face.size(), 0);
+    vector<bool> face_invalid(n.face.size(), false);
+    detect_self_intersect(n, face_invalid);
+    vector<int> face_group(n.face.size(), 0);
+    n.update();
+    laplacian_smooth(n, 50);
     //clear_spike(n, 0, face_invalid);
-    //int max_group = flood_fill_face_group(n, face_invalid, face_group);
-    //cout << "Choose Group " << max_group << endl;
-    //filter_group(n, face_group, max_group);
-    //n.update(false);
-    //fill_trivial_hole(n);
+    int max_group = flood_fill_face_group(n, face_invalid, face_group);
+    cout << "Choose Group " << max_group << endl;
+    filter_group(n, face_group, max_group);
     enclose_offset_mesh(m, n, is_vertex_invalid);
     m.clean();
     m.update();
-    laplacian_hc_smooth(m,3);
 }
 
 void remove_face_by_plane(Mesh& m, const Plane& p) {
@@ -1025,7 +1036,7 @@ void advance_front_on_plane(Mesh& m, list<int>& path) {
     Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
     int last_size = path.size();
     bool success = true;
-    while (success && path.size() >= 3) {
+    while (success) {
         success = false;
         vector<pair<float, list<int>::iterator> > v;
         for (list<int>::iterator i = path.begin(); i != path.end(); ++i) {
@@ -1035,11 +1046,15 @@ void advance_front_on_plane(Mesh& m, list<int>& path) {
             Point3f b = (m.vertex[*k] - m.vertex[*i]).normalize();
             float cos_value = a * b;
             bool convex = cross_product(-a, b) * inner_orientation > eps;
-            if (!convex)
-                cos_value = -2 - cos_value;
-            v.push_back(pair<float, list<int>::iterator>(cos_value, i));
+            if (convex)
+                v.push_back(pair<float, list<int>::iterator>(cos_value, i));
         }
         sort(v.begin(), v.end(), associative_compare<float, list<int>::iterator>);
+        // First try
+        // Link when angle in (0, 75)
+        // Add a new point when angle in (75, 135)
+        // Add two new points when angle in (135, 180)
+        // If failed(intersected, try to add fewer points.
         for (auto it = v.rbegin(); it != v.rend(); ++it) {
             list<int>::iterator i = it->second;
             list<int>::iterator j = prev(path, i);
@@ -1053,24 +1068,7 @@ void advance_front_on_plane(Mesh& m, list<int>& path) {
             float lb = b.length();
             a.normalize();
             b.normalize();
-            if (it->first > COS_75) {
-                Face f(*j, *i, *k);
-                if (is_intersected_with_path(m, path, f))
-                    continue;
-                m.face.push_back(f);
-                path.erase(i);
-            } else if (it->first > -COS_45) {
-                Point3f&& p = v + ((a + b).normalize() * (la + lb) / 2);
-                m.vertex.push_back(p);
-                Face f(*j, *i, m.vertex.size() - 1);
-                Face g(m.vertex.size() - 1, *i, *k);
-                if (is_intersected_with_path(m, path, f) ||
-                    is_intersected_with_path(m, path, g))
-                    continue;
-                m.face.push_back(f);
-                m.face.push_back(g);
-                *i = m.vertex.size() - 1;
-            } else {
+            if (it->first < -COS_45) {
                 Point3f&& p = v + ((a + a + b).normalize() * (la + la + lb) / 2);
                 Point3f&& q = v + ((a + b + b).normalize() * (la + lb + lb) / 2);
                 m.vertex.push_back(p);
@@ -1078,20 +1076,89 @@ void advance_front_on_plane(Mesh& m, list<int>& path) {
                 Face f(*j, *i, m.vertex.size() - 2);
                 Face g(m.vertex.size() - 2, *i, m.vertex.size() - 1);
                 Face h(m.vertex.size() - 1, *i, *k);
-                if (is_intersected_with_path(m, path, f) ||
-                    is_intersected_with_path(m, path, g) ||
-                    is_intersected_with_path(m, path, h))
-                    continue;
-                m.face.push_back(f);
-                m.face.push_back(g);
-                m.face.push_back(h);
-                *i = m.vertex.size() - 1;
-                path.insert(i, m.vertex.size() - 2);
+                if (!is_intersected_with_path(m, path, f) &&
+                    !is_intersected_with_path(m, path, g) &&
+                    !is_intersected_with_path(m, path, h)) {
+                    m.face.push_back(f);
+                    m.face.push_back(g);
+                    m.face.push_back(h);
+                    *i = m.vertex.size() - 1;
+                    path.insert(i, m.vertex.size() - 2);
+                    success = true;
+                    break;
+                }
             }
-            success = true;
-            break;
+            if (it->first < COS_75) {
+                Point3f&& p = v + ((a + b).normalize() * (la + lb) / 2);
+                m.vertex.push_back(p);
+                Face f(*j, *i, m.vertex.size() - 1);
+                Face g(m.vertex.size() - 1, *i, *k);
+                if (!is_intersected_with_path(m, path, f) &&
+                    !is_intersected_with_path(m, path, g)) {
+                    m.face.push_back(f);
+                    m.face.push_back(g);
+                    *i = m.vertex.size() - 1;
+                    success = true;
+                    break;
+                }
+            }
+            if (it->first < COS_0) {
+                Face f(*j, *i, *k);
+                if (!is_intersected_with_path(m, path, f)) {
+                    m.face.push_back(f);
+                    path.erase(i);
+                    success = true;
+                    break;
+                }
+            }
         }
     }
+}
+
+int parent(vector<int>& p, int x) {
+    if (p[x] == x)
+        return x;
+    else
+        return p[x] = parent(p, p[x]);
+}
+
+void join(vector<int>& p, int x, int y) {
+    p[parent(p, y)] = parent(p, x);
+}
+
+void shrink_edge(Mesh& m) {
+    vector<float> length;
+    for (int i = 0; i < m.vertex.size(); ++i)
+        for (int j : m.adj_vertex[i])
+            length.push_back((m.vertex[i] - m.vertex[j]).length());
+    float avg = average(length);
+    float threshold = avg / 2;
+    cout << avg << ' ' << threshold << endl;
+    vector<int> p(m.vertex.size());
+    for (int i = 0; i < p.size(); ++i)
+        p[i] = i;
+    vector<bool> border(m.vertex.size(), false);
+    gen_border_vertex(m, border);
+    for (int i = 0; i < m.vertex.size(); ++i)
+        if (!border[i] && parent(p, i) == i)
+            for (int j : m.adj_vertex[i])
+                if (!border[j] && parent(p, j) == j) {
+                    if ((m.vertex[i] - m.vertex[j]).length() < threshold) {
+                        cout << "Merge " << i << ' ' << j << endl;
+                        merge_vertex(m, i, j);
+                        m.vertex[i] = (m.vertex[i] + m.vertex[j]) / 2;
+                        join(p, i, j);
+                    }
+                }
+    vector<Face> face;
+    for (const Face& f : m.face) {
+        if (parent(p, f.vertex_index[0]) != parent(p, f.vertex_index[1]) &&
+            parent(p, f.vertex_index[1]) != parent(p, f.vertex_index[2]) &&
+            parent(p, f.vertex_index[2]) != parent(p, f.vertex_index[0]))
+            face.push_back(f);
+    }
+    m.face.swap(face);
+    m.update();
 }
 
 void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
@@ -1105,39 +1172,43 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
         list<int>::const_iterator j = next(path, i);
         length.push_back((m.vertex[*i] - m.vertex[*j]).length());
     }
-    float avg_length = filtered_average(length);
-    float std_dev_length = filtered_standard_deviation(length);
-    cout << "Avg length = " << avg_length << endl;
-    cout << "Std dev length = " << std_dev_length << endl;
+    float avg = filtered_average(length);
+    float sdv = filtered_standard_deviation(length);
+    cout << "Avg length = " << avg << endl;
+    cout << "Std dev length = " << sdv << endl;
     list<int>::iterator i = path.begin();
     list<float>::iterator k = length.begin();
-    for (;i != path.end(); ++i, ++k)
-        if (*k > avg_length + 3 * std_dev_length) {
-            int num_to_add = floor(*k / (avg_length +  std_dev_length));
-            list<int>::iterator j = next(path, i);
-            list<float>::iterator l = next(length, k);
-            Point3f&& unit = (m.vertex[*j] - m.vertex[*i]) / (num_to_add + 1);
-            float unit_length = unit.length();
-            *k = unit_length;
-            for (int n = 1; n <= num_to_add; ++n) {
+    for (;i != path.end(); ++i, ++k) {
+        list<int>::iterator j = next(path, i);
+        list<float>::iterator l = next(length, k);
+        if (!is_adjacent(m, *i, *j) && *k > avg + 2 * sdv) {
+            int add_vertices = floorf(*k / (avg + sdv));
+            Point3f&& unit = (m.vertex[*j] - m.vertex[*i]) / (add_vertices + 1);
+            *k = unit.length();
+            for (int n = 1; n <= add_vertices; ++n) {
                 m.vertex.push_back(m.vertex[*i] + unit * n);
                 path.insert(j, m.vertex.size() - 1);
-                length.insert(l, unit_length);
+                length.insert(l, unit.length());
             }
         }
+    }
     int f = m.face.size();
     // Main AFM
     advance_front_on_plane(m, path);
-    // Shrink
 
-    // Smooth
     Mesh n;
     n.vertex = m.vertex;
     n.texture = m.texture;
     n.face.assign(m.face.begin() + f, m.face.end());
     n.update();
-    laplacian_smooth(n, 3);
+    // Shrink
+    shrink_edge(n);
+    // Smooth
+    laplacian_smooth(n, 20);
+
     m.vertex = n.vertex;
+    m.face.erase(m.face.begin() + f, m.face.end());
+    m.face.insert(m.face.end(), n.face.begin(), n.face.end());
     m.update();
 }
 
