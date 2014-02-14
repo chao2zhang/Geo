@@ -1,17 +1,62 @@
 #include "mesh.h"
 
 #include <ctime>
-#include <fstream>
+#include <iostream>
 #include <algorithm>
 
 using std::istream;
 using std::ostream;
+using std::cout;
 using std::vector;
 using std::cerr;
 using std::endl;
 using std::string;
 using std::istringstream;
 using std::find;
+
+/**
+ * Solve ax = b
+ */
+
+inline static bool solve_2(float a[][2], float b[], float x[]) {
+    float A = a[0][0] * a[1][1] - a[0][1] * a[1][0];
+    if (fabs(A) < EPS)
+        return false;
+    x[0] = (b[0] * a[1][1] - a[0][1] * b[1]) / A;
+    x[1] = (a[0][0] * b[1] - b[0] * a[1][0]) / A;
+    return true;
+}
+
+inline static bool solve_3(float a[][3], float b[], float x[]) {
+    float A =
+            a[0][0] * a[1][1] * a[2][2] +
+            a[0][1] * a[1][2] * a[2][0] +
+            a[0][2] * a[1][0] * a[2][1] -
+            a[0][0] * a[1][2] * a[2][1] -
+            a[0][1] * a[1][0] * a[2][2] -
+            a[0][2] * a[1][1] * a[2][0];
+    if (fabs(A) < EPS)
+        return false;
+    x[0] = (b[0] * a[1][1] * a[2][2] +
+            a[0][1] * a[1][2] * b[2] +
+            a[0][2] * b[1] * a[2][1] -
+            b[0] * a[1][2] * a[2][1] -
+            a[0][1] * b[1] * a[2][2] -
+            a[0][2] * a[1][1] * b[2]) / A;
+    x[1] = (a[0][0] * b[1] * a[2][2] +
+            b[0] * a[1][2] * a[2][0] +
+            a[0][2] * a[1][0] * b[2] -
+            a[0][0] * a[1][2] * b[2] -
+            b[0] * a[1][0] * a[2][2] -
+            a[0][2] * b[1] * a[2][0]) / A;
+    x[2] = (a[0][0] * a[1][1] * b[2] +
+            a[0][1] * b[1] * a[2][0] +
+            b[0] * a[1][0] * a[2][1] -
+            a[0][0] * b[1] * a[2][1] -
+            a[0][1] * a[1][0] * b[2] -
+            b[0] * a[1][1] * a[2][0]) / A;
+    return true;
+}
 
 void Mesh::connect_vertex(int u, int v) {
     if (u == v)
@@ -135,7 +180,7 @@ void Mesh::calculate_vertex_normal() {
     for (int i = 0; i < vertex.size(); ++i) {
         for (int j : faces_of_vertex[i])
             vertex_normal[i] += face_normal[j];
-        vertex_normal[i].normalize();
+        vertex_normal[i] /= faces_of_vertex[i].size();
     }
 }
 

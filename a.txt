@@ -1,109 +1,139 @@
 Loading...
-Loading...574ms
+Loading...405ms
 Counting spikes...
 Detect 146/14871 spikes
 Counting spikes...1ms
 Executing positioning...
 Center: 0.446321 -0.0760342 2.96417
 Executing positioning...1ms
-Executing partitioning...
-Executing partitioning..66ms
-Executing partitioning...
-Executing partitioning..67ms
-Executing projecting...
-0 faces reverted
-Executing projecting...48ms
-Executing removing...
-Executing removing...93ms
-Executing filling...
-Avg length = 0.0373014
-Std dev length = 0.036807
-Inner sum = 6.2782
-0.0535556 0.0107111
-Merge 5185 5188
-Merge 5186 5185
-Merge 5187 5251
-Merge 5187 5319
-Merge 5189 5258
-Merge 5189 5550
-Merge 5189 5551
-Merge 5195 5196
-Merge 5197 5198
-Merge 5197 5200
-Merge 5199 5229
-Merge 5199 5232
-Merge 5230 5231
-Merge 5233 5242
-Merge 5233 5247
-Merge 5234 5235
-Merge 5234 5240
-Merge 5236 5237
-Merge 5236 5239
-Merge 5238 5241
-Merge 5238 5246
-Merge 5248 5253
-Merge 5248 5254
-Merge 5250 5256
-Merge 5250 5257
-Merge 5255 5324
-Merge 5255 5325
-Merge 5320 5327
-Merge 5320 5452
-Merge 5323 5571
-Merge 5323 5576
-Merge 5326 5565
-Merge 5326 5569
-Merge 5450 5563
-Merge 5459 5552
-Merge 5459 5553
-Merge 5459 5555
-Merge 5533 5534
-Merge 5533 5536
-Merge 5535 5533
-Merge 5535 5559
-Merge 5549 5554
-Merge 5556 5560
-Merge 5557 5614
-Merge 5557 5615
-Merge 5558 5535
-Merge 5562 5593
-Merge 5562 5616
-Merge 5567 5572
-Merge 5567 5580
-Merge 5570 5573
-Merge 5579 5582
-Merge 5589 5590
-Merge 5589 5594
-Merge 5591 5592
-Merge 5591 5621
-Merge 5598 5630
-Merge 5603 5644
-Merge 5603 5645
-Merge 5604 5603
-Merge 5604 5646
-Merge 5605 5657
-Merge 5613 5617
-Merge 5618 5619
-Merge 5622 5625
-Merge 5623 5626
-Merge 5624 5627
-Merge 5628 5633
-Merge 5643 5647
-Merge 5648 5656
-Merge 5654 5666
-Merge 5655 5654
-Merge 5836 5896
-Merge 5841 5904
-Merge 5874 5875
-Merge 5874 5878
-Merge 5876 5879
-Merge 5876 5881
-Merge 5882 5933
-Merge 5931 5936
-Merge 5935 6018
-Executing filling...156ms
+Executing shell...
+Invalid Normal: Vertex 377
+Invalid Normal: Vertex 526
+Invalid Normal: Vertex 528
+Invalid Normal: Vertex 981
+Invalid Normal: Vertex 1500
+Invalid Normal: Vertex 1516
+Invalid Normal: Vertex 1518
+Invalid Normal: Vertex 1544
+Invalid Normal: Vertex 1548
+Invalid Normal: Vertex 1551
+Invalid Normal: Vertex 1601
+Invalid Normal: Vertex 1701
+Invalid Normal: Vertex 1703
+Invalid Normal: Vertex 1707
+Invalid Normal: Vertex 1811
+Invalid Normal: Vertex 1812
+Invalid Normal: Vertex 2179
+Invalid Normal: Vertex 2515
+Invalid Normal: Vertex 2553
+Invalid Normal: Vertex 2604
+Invalid Normal: Vertex 2799
+Invalid Normal: Vertex 2804
+Intersect: Vertex 2834 and Face 8873
+Invalid Normal: Vertex 2837
+Invalid Normal: Vertex 2929
+Invalid Normal: Vertex 2964
+Invalid Normal: Vertex 3065
+Intersect: Vertex 3156 and Face 6534
+Intersect: Vertex 3157 and Face 9020
+Invalid Normal: Vertex 3158
+Intersect: Vertex 3160 and Face 3892
+Invalid Normal: Vertex 3163
+Invalid Normal: Vertex 3179
+Intersect: Vertex 3209 and Face 4174
+Invalid Normal: Vertex 3223
+Invalid Normal: Vertex 3224
+Invalid Normal: Vertex 3225
+Intersect: Vertex 3301 and Face 6619
+Intersect: Vertex 3303 and Face 3970
+Intersect: Vertex 3304 and Face 6619
+Intersect: Vertex 3305 and Face 6619
+Intersect: Vertex 3307 and Face 3974
+Intersect: Vertex 3308 and Face 6621
+Intersect: Vertex 3309 and Face 3966
+Invalid Normal: Vertex 3310
+Intersect: Vertex 3311 and Face 3966
+Intersect: Vertex 3312 and Face 3969
+Intersect: Vertex 3313 and Face 4014
+Intersect: Vertex 3314 and Face 3968
+Invalid Normal: Vertex 3315
+Intersect: Vertex 3321 and Face 9078
+Intersect: Vertex 3322 and Face 9079
+Intersect: Vertex 3330 and Face 3975
+Intersect: Vertex 3337 and Face 3980
+Intersect: Vertex 3342 and Face 9094
+Invalid Normal: Vertex 3343
+Intersect: Vertex 3344 and Face 9094
+Invalid Normal: Vertex 3345
+Intersect: Vertex 3346 and Face 6640
+Intersect: Vertex 3347 and Face 4030
+Intersect: Vertex 3375 and Face 4072
+Invalid Normal: Vertex 3376
+Invalid Normal: Vertex 3377
+Intersect: Vertex 3378 and Face 4074
+Invalid Normal: Vertex 3392
+Intersect: Vertex 3393 and Face 4017
+Invalid Normal: Vertex 3397
+Invalid Normal: Vertex 3406
+Invalid Normal: Vertex 3413
+Intersect: Vertex 3414 and Face 4026
+Intersect: Vertex 3415 and Face 9130
+Intersect: Vertex 3416 and Face 9130
+Intersect: Vertex 3418 and Face 9132
+Intersect: Vertex 3419 and Face 9131
+Intersect: Vertex 3420 and Face 9134
+Intersect: Vertex 3421 and Face 1555
+Intersect: Vertex 3422 and Face 6689
+Intersect: Vertex 3423 and Face 9133
+Intersect: Vertex 3425 and Face 1553
+Intersect: Vertex 3430 and Face 1550
+Intersect: Vertex 3432 and Face 9140
+Intersect: Vertex 3433 and Face 9139
+Invalid Normal: Vertex 3434
+Intersect: Vertex 3435 and Face 4041
+Invalid Normal: Vertex 3440
+Invalid Normal: Vertex 3441
+Invalid Normal: Vertex 3442
+Intersect: Vertex 3443 and Face 1562
+Intersect: Vertex 3444 and Face 1563
+Invalid Normal: Vertex 3445
+Intersect: Vertex 3446 and Face 9146
+Invalid Normal: Vertex 3447
+Invalid Normal: Vertex 3448
+Invalid Normal: Vertex 3449
+Invalid Normal: Vertex 3451
+Invalid Normal: Vertex 3527
+Invalid Normal: Vertex 3528
+Intersect: Vertex 3560 and Face 9190
+Intersect: Vertex 3562 and Face 9190
+Invalid Normal: Vertex 3564
+Invalid Normal: Vertex 3677
+Invalid Normal: Vertex 3685
+Intersect: Vertex 3686 and Face 3893
+Intersect: Vertex 3688 and Face 6841
+Intersect: Vertex 3689 and Face 4162
+Invalid Normal: Vertex 3691
+Invalid Normal: Vertex 3725
+Invalid Normal: Vertex 3728
+Invalid Normal: Vertex 3768
+Invalid Normal: Vertex 3777
+Intersect: Vertex 3916 and Face 4272
+Intersect: Vertex 3920 and Face 6965
+Intersect: Vertex 3922 and Face 1799
+Invalid Normal: Vertex 3932
+Invalid Normal: Vertex 3986
+Invalid Normal: Vertex 4610
+Invalid Normal: Vertex 4794
+Intersect: Vertex 4799 and Face 9846
+Invalid Normal: Vertex 4884
+Invalid Normal: Vertex 4912
+Invalid Normal: Vertex 4980
+Invalid Normal: Vertex 5002
+Invalid Normal: Vertex 5024
+Intersect: Vertex 5025 and Face 8873
+Executing shell...1008ms
 Executing unify normals...
-1779 faces reverted
-Executing unify normals...10ms
+234 faces reverted
+Executing unify normals...5ms
 Writing...
-Writing...935ms
+Writing...754ms

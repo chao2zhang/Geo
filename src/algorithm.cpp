@@ -3,7 +3,6 @@
 #include <vector>
 #include <list>
 #include <queue>
-#include <iterator>
 #include <utility>
 #include <cmath>
 #include <cassert>
@@ -22,109 +21,10 @@ using std::iterator_traits;
 using std::next;
 using std::isnan;
 
-/**
- * Tell if Set {a, b} intersects with Set {c, d}
- */
-template <typename T>
-inline static bool is_set_intersected(T a, T b, T c, T d) {
-    return a == c || b == d || a == d || b == c;
-}
-
-/**
- * Circular list function begin
- */
-template<typename T>
-inline static typename T::iterator next(T& collection, typename T::iterator it) {
-    typename T::iterator r(it);
-    ++r;
-    if (r == collection.end())
-        r = collection.begin();
-    return r;
-}
-
-template<typename T>
-inline static typename T::const_iterator next(const T& collection, typename T::const_iterator it) {
-    typename T::const_iterator r(it);
-    ++r;
-    if (r == collection.end())
-        r = collection.begin();
-    return r;
-}
-
-template<typename T>
-inline static typename T::iterator prev(T& collection, typename T::iterator it) {
-    typename T::iterator r(it);
-    if (r == collection.begin())
-        r = collection.end();
-    --r;
-    return r;
-}
-
-template<typename T>
-inline static typename T::const_iterator prev(const T& collection, typename T::const_iterator it) {
-    typename T::const_iterator r(it);
-    if (r == collection.begin())
-        r = collection.end();
-    --r;
-    return r;
-}
-
-template<typename S, typename T>
-inline static int associative_compare(const pair<S, T>& left, const pair<S, T>& right) {
-    return left.first < right.first;
-}
-
-/**
- * Circular list end
- */
-
-template<typename T, typename V = typename iterator_traits<typename T::const_iterator>::value_type>
-inline static V average(const T& collection) {
-    V val = 0;
-    for (const V& v: collection)
-        val += v;
-    return val / collection.size();
-}
-
-template<typename T, typename V = typename iterator_traits<typename T::const_iterator>::value_type>
-inline static V standard_deviation(const T& collection) {
-    V val = 0;
-    V avg = average(collection);
-    for (const V& v: collection)
-        val += (v - avg) * (v - avg);
-    return sqrt(val / collection.size());
-}
-
-template<typename T, typename V = typename iterator_traits<typename T::const_iterator>::value_type>
-inline static V filtered_average(const T& collection) {
-    V val = 0;
-    V avg = average(collection);
-    V sdv = standard_deviation(collection);
-    V upper_limit = avg + sdv;
-    V lower_limit = avg - sdv;
-    for (const V& v: collection)
-        if (lower_limit < v && v < upper_limit)
-            val += v;
-    return val / collection.size();
-}
-
-template<typename T, typename V = typename iterator_traits<typename T::const_iterator>::value_type>
-inline static V filtered_standard_deviation(const T& collection) {
-    V val = 0;
-    V avg = average(collection);
-    V sdv = standard_deviation(collection);
-    V upper_limit = avg + sdv;
-    V lower_limit = avg - sdv;
-    for (const V& v: collection)
-        if (lower_limit < v && v < upper_limit)
-            val += (v - avg) * (v - avg);
-    return sqrt(val / collection.size());
-}
-
 inline static float safe_acos(float x) {
-    if (x > 1 - eps)
+    if (x > ONE_EPS)
         return 0;
-    if (x < -1 + eps)
+    if (x < MINUS_ONE_EPS)
         return PI;
     return acos(x);
 }
@@ -382,7 +282,7 @@ inline static bool is_border_edge(const Mesh& m, int u, int v) {
  */
 inline static bool is_vertex_normal_valid(const Mesh& m, int v) {
     for (int f : m.faces_of_vertex[v])
-        if (m.vertex_normal[v] * m.face_normal[f] < eps)
+        if (m.vertex_normal[v] * m.face_normal[f] < 0)
             return false;
     return true;
 }
@@ -752,13 +652,15 @@ void gen_offset_vertex(const Mesh& m, float offset, Mesh& n) {
 }
 
 void gen_offset_invalid_vertex(const Mesh& m, const Mesh& n, float offset, vector<bool>& is_invalid) {
-    // Mark Vertex i_m as invalid if Line (i_m, i_o) intersects with any face.
+    // Mark Vertex i_m as invalid if Line (i_m, i_n) intersects with any face.
     for (int i = 0; i < m.vertex.size(); ++i) {
         if (!is_vertex_normal_valid(m, i)) {
-            cout << "Invalid: Vertex " << i << endl;
+            cout << "Invalid Normal: Vertex " << i << endl;
             is_invalid[i] = true;
             continue;
         }
+        if (is_invalid[i])
+            continue;
         for (int j = 0; j < m.face.size(); ++j)
             if (is_intersected(m, m.vertex[i], n.vertex[i], j) && !m.face[j].has_vertex(i)) {
                 cout << "Intersect: Vertex " << i << " and Face " << j << endl;
@@ -843,10 +745,9 @@ void detect_self_intersect(const Mesh& m, vector<bool>& is_int) {
 /*
  * All faces in one cluster shares at least one edge of another face in the same cluster.
  */
-int flood_fill_face_group(const Mesh& m, const vector<bool>& is_invalid, vector<int>& face_group) {
+void flood_fill_face_group(Mesh& m, const vector<bool>& is_invalid, vector<int>& face_group, int filter_count) {
+    vector<Face> face;
     int cur_group = 0;
-    int max_group = 0;
-    int max_group_count = 0;
     for (int i = 0; i < m.face.size(); ++i) {
         if (face_group[i] || is_invalid[i])
             continue;
@@ -862,24 +763,13 @@ int flood_fill_face_group(const Mesh& m, const vector<bool>& is_invalid, vector<
                     q.push_back(f);
                     face_group[f] = cur_group;
                 }
-            cur_pos++;
+            ++cur_pos;
         }
-        cout << "Group " << cur_group << " Number " << q.size() << endl;
-        if (q.size() > max_group_count) {
-            max_group_count = q.size();
-            max_group = cur_group;
-        }
+        if (q.size() > filter_count)
+            for (int j : q)
+                face.push_back(m.face[j]);
     }
-    cout << "Total groups " << cur_group - 1 << endl;
-    return max_group;
-}
-
-void filter_group(Mesh& m, const vector<int>& face_group, int group) {
-    vector<Face> face;
-    face.swap(m.face);
-    for (int i = 0; i < face.size(); ++i)
-        if (face_group[i] == group)
-            m.face.push_back(face[i]);
+    m.face.swap(face);
 }
 
 void fill_hole(Mesh& m, const vector<int>& path) {
@@ -917,18 +807,16 @@ void mesh_offset(Mesh& m, float offset) {
     vector<bool> is_vertex_invalid(m.vertex.size(), false);
     gen_offset_vertex(m, offset, n);
     n.texture = m.texture;
+    n.update();
     gen_offset_invalid_vertex(m, n, offset, is_vertex_invalid);
     gen_offset_face(m, n, is_vertex_invalid);
     n.update();
-    vector<bool> face_invalid(n.face.size(), false);
-    detect_self_intersect(n, face_invalid);
-    vector<int> face_group(n.face.size(), 0);
-    n.update();
-    laplacian_smooth(n, 50);
-    //clear_spike(n, 0, face_invalid);
-    int max_group = flood_fill_face_group(n, face_invalid, face_group);
-    cout << "Choose Group " << max_group << endl;
-    filter_group(n, face_group, max_group);
+//    vector<bool> face_invalid(n.face.size(), false);
+//    detect_self_intersect(n, face_invalid);
+//    vector<int> face_group(n.face.size(), 0);
+//    n.update();
+//    //laplacian_smooth(n, 50);
+//    flood_fill_face_group(n, face_invalid, face_group, 10);
     enclose_offset_mesh(m, n, is_vertex_invalid);
     m.clean();
     m.update();
@@ -937,7 +825,7 @@ void mesh_offset(Mesh& m, float offset) {
 void remove_face_by_plane(Mesh& m, const Plane& p) {
     vector<bool> is_vertex_on_plane(m.vertex.size(), false);
     for (int i = 0; i < m.vertex.size(); ++i) {
-        if (fabs(get_value_on_plane(m.vertex[i], p)) < eps)
+        if (fabs(get_value_on_plane(m.vertex[i], p)) < EPS)
             is_vertex_on_plane[i] = true;
     }
     vector<Face> face;
@@ -964,7 +852,7 @@ void get_max_border_path_by_plane(Mesh& m, const Plane& p, list<int>& max_path) 
                     max_path.assign(path.begin(), path.end());
             }
     for (list<int>::iterator i = max_path.begin(); i != max_path.end();)
-        if (fabs(get_value_on_plane(m.vertex[*i], p)) > eps)
+        if (fabs(get_value_on_plane(m.vertex[*i], p)) > EPS)
             i = max_path.erase(i);
         else
             ++i;
@@ -984,7 +872,7 @@ Point3f get_orientation_vector_of_path_on_plane(const Mesh& m, const list<int>& 
         inner_orientation = cross_product(m.vertex[*i] - m.vertex[*j],
                                           m.vertex[*k] - m.vertex[*i]);
         ++i;
-    } while (inner_orientation.length() < eps);
+    } while (inner_orientation.length() < EPS);
     i = path.begin();
     float inner_sum = 0;
     while (i != path.end()) {
@@ -1045,7 +933,7 @@ void advance_front_on_plane(Mesh& m, list<int>& path) {
             Point3f a = (m.vertex[*j] - m.vertex[*i]).normalize();
             Point3f b = (m.vertex[*k] - m.vertex[*i]).normalize();
             float cos_value = a * b;
-            bool convex = cross_product(-a, b) * inner_orientation > eps;
+            bool convex = cross_product(-a, b) * inner_orientation > EPS;
             if (convex)
                 v.push_back(pair<float, list<int>::iterator>(cos_value, i));
         }
@@ -1229,12 +1117,12 @@ void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
             // iff uvw < 180 degree
             // and no other vertex on path lies inside uvw
             // and uvw is a triangle
-            bool convex = cross_product(v - u, w - v) * inner_orientation > eps;
+            bool convex = cross_product(v - u, w - v) * inner_orientation > EPS;
             if (!convex) {
                 ++i;
                 continue;
             }
-            bool triangle = cross_product(u - v, w - v).length() > eps;
+            bool triangle = cross_product(u - v, w - v).length() > EPS;
             if (!triangle) {
                 ++i;
                 continue;
