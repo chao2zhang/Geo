@@ -15,4 +15,9 @@
 # Tests
 tests/*.*
 tests
-bin/
+bin/*.*
+bin
+obj/*.*
+obj
+*.txt
+*.exe
