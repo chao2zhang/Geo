@@ -472,16 +472,6 @@ void center_positioning_by_averaging_vertex(Mesh& m) {
         p -= s;
 }
 
-void dfs_face_normals(vector<bool>& visited, unsigned& reverse_count, Mesh& m, int i) {
-    if (visited[i])
-        return;
-    visited[i] = true;
-    for (int j : m.adj_face[i]) {
-        reverse_count += correct_winding(m, i, j);
-        dfs_face_normals(visited, reverse_count, m, j);
-    }
-}
-
 void unify_face_normals(Mesh& m) {
     // Suppose the orientation of first face in a connected component is correct
     // Fix the orientation of adjacent faces
@@ -492,7 +482,22 @@ void unify_face_normals(Mesh& m) {
     vector<bool> visited(m.face.size(), false);
     unsigned reverse_count = 0;
     for (int i = 0; i < m.face.size(); ++i) {
-        dfs_face_normals(visited, reverse_count, m, i);
+        if (visited[i])
+            continue;
+        queue<int> q;
+        q.push(i);
+        visited[i] = true;
+        while (!q.empty()) {
+            int j = q.front();
+            for (int j : m.adj_face[i]) {
+                reverse_count += correct_winding(m, i, j);
+                if (!visited[j]) {
+                    visited[j] = true;
+                    q.push(j);
+                }
+            }
+            q.pop();
+        }
     }
     if (reverse_count > m.face.size() / 2)
         for (int i = 0; i < m.face.size(); ++i)
@@ -745,11 +750,10 @@ void detect_self_intersect(const Mesh& m, vector<bool>& is_int) {
 /*
  * All faces in one cluster shares at least one edge of another face in the same cluster.
  */
-void flood_fill_face_group(Mesh& m, const vector<bool>& is_invalid, vector<int>& face_group, int filter_count) {
-    vector<Face> face;
+int flood_fill_face_group(const Mesh& m, vector<int>& face_group) {
     int cur_group = 0;
     for (int i = 0; i < m.face.size(); ++i) {
-        if (face_group[i] || is_invalid[i])
+        if (face_group[i])
             continue;
         ++cur_group;
         face_group[i] = cur_group;
@@ -759,17 +763,14 @@ void flood_fill_face_group(Mesh& m, const vector<bool>& is_invalid, vector<int>&
         while (cur_pos < q.size()) {
             int cur_face = q[cur_pos];
             for (int f : m.adj_face[cur_face])
-                if (face_group[f] == 0 && !is_invalid[f]) {
+                if (face_group[f] == 0) {
                     q.push_back(f);
                     face_group[f] = cur_group;
                 }
             ++cur_pos;
         }
-        if (q.size() > filter_count)
-            for (int j : q)
-                face.push_back(m.face[j]);
     }
-    m.face.swap(face);
+    return cur_group;
 }
 
 void fill_hole(Mesh& m, const vector<int>& path) {
@@ -835,6 +836,28 @@ void remove_face_by_plane(Mesh& m, const Plane& p) {
             !is_vertex_on_plane[m.face[i].vertex_index[2]])
             face.push_back(m.face[i]);
     }
+    m.face.swap(face);
+    m.clean();
+    m.update();
+}
+
+void remove_face_by_largest_component(Mesh& m) {
+    vector<int> face_group(m.face.size(), 0);
+    flood_fill_face_group(m, face_group);
+    vector<int> component_size(m.face.size() + 1, 0);
+    int max_group = 0;
+    int max_group_size = 0;
+    for (int g : face_group) {
+        ++component_size[g];
+        if (component_size[g] > max_group_size) {
+            max_group = g;
+            max_group_size = component_size[g];
+        }
+    }
+    vector<Face> face;
+    for (int i = 0; i < face_group.size(); ++i)
+        if (face_group[i] == max_group)
+            face.push_back(m.face[i]);
     m.face.swap(face);
     m.clean();
     m.update();
@@ -1147,4 +1170,61 @@ void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
         last_size = path.size();
     }
     m.update();
+}
+
+void rotate_point(float rot[3][3], Point3f& p) {
+    Point3f np;
+    np.x[0] = rot[0][0] * p.x[0] + rot[0][1] * p.x[1] + rot[0][2] * p.x[2];
+    np.x[1] = rot[1][0] * p.x[0] + rot[1][1] * p.x[1] + rot[1][2] * p.x[2];
+    np.x[2] = rot[2][0] * p.x[0] + rot[2][1] * p.x[1] + rot[2][2] * p.x[2];
+    p = np;
+}
+
+void rotate_mesh(Mesh& m, const Point3f& from, const Point3f& to) {
+    // No need to rotate if the total orientation is the same with target destination.
+    if (from * to > ONE_EPS)
+        return;
+
+    // Reverse
+    if (from * to < MINUS_ONE_EPS) {
+        for (Point3f& p : m.vertex)
+            p = -p;
+        return;
+    }
+
+    // Rotate around u
+    Point3f&& u = cross_product(from, to);
+    u.normalize();
+    float cosa = from * to;
+    float sina = sqrt(1 - cosa * cosa);
+    float onec = 1 - cosa;
+    float rot[3][3];
+    rot[0][0] = u.x[0] * u.x[0] * onec + cosa;
+    rot[0][1] = u.x[0] * u.x[1] * onec - u.x[2] * sina;
+    rot[0][2] = u.x[0] * u.x[2] * onec + u.x[1] * sina;
+    rot[1][0] = u.x[1] * u.x[0] * onec + u.x[2] * sina;
+    rot[1][1] = u.x[1] * u.x[1] * onec + cosa;
+    rot[1][2] = u.x[1] * u.x[2] * onec - u.x[0] * sina;
+    rot[2][0] = u.x[2] * u.x[0] * onec - u.x[1] * sina;
+    rot[2][1] = u.x[2] * u.x[1] * onec + u.x[0] * sina;
+    rot[2][2] = u.x[2] * u.x[2] * onec + cosa;
+    for (Point3f& p : m.vertex)
+        rotate_point(rot, p);
+    for (Point3f& p : m.vertex_normal)
+        rotate_point(rot, p);
+    for (Point3f& p : m.face_normal)
+        rotate_point(rot, p);
+}
+
+void rotate_mesh(Mesh& m) {
+    Point3f t;
+    Point3f z(0, 0, 1);
+    for (int i = 0; i < m.face.size(); ++i)
+        t += m.face_normal[i];
+    t.normalize();
+    t.x[0] = 0;
+    rotate_mesh(m, t, z);
+    rotate_mesh(m,
+                Point3f(0, 1, 0),
+                Point3f(1, 0, 0));
 }
