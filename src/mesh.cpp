@@ -212,30 +212,29 @@ void Mesh::load(istream& in) {
         iss >> first;
         if (first == "v") {
             vertex.push_back(Point3f());
-            iss >> vertex.back().x[0];
-            iss >> vertex.back().x[1];
-            iss >> vertex.back().x[2];
+            iss >> vertex.back();
         } else if (first == "vt") {
             texture.push_back(Point2f());
-            iss >> texture.back().x[0];
-            iss >> texture.back().x[1];
+            iss >> texture.back();
         } else if (first == "f") {
             face.push_back(Face());
             iss >> face.back().vertex_index[0];
+            --face.back().vertex_index[0];
             iss >> ch;
             iss >> face.back().texture_index[0];
+            --face.back().texture_index[0];
+
             iss >> face.back().vertex_index[1];
+            --face.back().vertex_index[1];
             iss >> ch;
             iss >> face.back().texture_index[1];
+            --face.back().texture_index[1];
+
             iss >> face.back().vertex_index[2];
+            --face.back().vertex_index[2];
             iss >> ch;
             iss >> face.back().texture_index[2];
-            face.back().vertex_index[0]--;
-            face.back().vertex_index[1]--;
-            face.back().vertex_index[2]--;
-            face.back().texture_index[0]--;
-            face.back().texture_index[1]--;
-            face.back().texture_index[2]--;
+            --face.back().texture_index[2];
         } else {
             text.push_back(line);
         }

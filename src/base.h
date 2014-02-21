@@ -126,11 +126,6 @@ inline static V filtered_standard_deviation(const T& collection) {
     return sqrt(val / collection.size());
 }
 
-inline void usage() {
-    std::cout << "./Geo <in_obj> <out_obj>" << std::endl;
-    exit(-1);
-}
-
 #define DEBUGGABLE
 #ifdef DEBUGGABLE
 #define DEBUG() cout << __FILE__ << ':' << __LINE__ << ' ' << __func__ << "()" << endl;

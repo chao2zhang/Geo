@@ -287,6 +287,16 @@ inline float cos(const Point2f& self, const Point2f& other) {
     return self * other / self.length() / other.length();
 }
 
+inline std::istream& operator>>(std::istream& in, Point3f& self) {
+    in >> self.x[0] >> self.x[1] >> self.x[2];
+    return in;
+}
+
+inline std::istream& operator>>(std::istream& in, Point2f& self) {
+    in >> self.x[0] >> self.x[1];
+    return in;
+}
+
 inline std::ostream& operator<<(std::ostream& out, const Point3f& self) {
     out << self.x[0] << ' ' << self.x[1] << ' ' << self.x[2];
     return out;
