@@ -488,7 +488,7 @@ void unify_face_normals(Mesh& m) {
         q.push(i);
         visited[i] = true;
         while (!q.empty()) {
-            int j = q.front();
+            int i = q.front();
             for (int j : m.adj_face[i]) {
                 reverse_count += correct_winding(m, i, j);
                 if (!visited[j]) {
@@ -603,7 +603,6 @@ void project_by_plane(Mesh& m, const Plane& p) {
         m.face.push_back(f);
     }
     m.update();
-    unify_face_normals(m);
 }
 
 /*
@@ -800,7 +799,6 @@ void fill_trivial_hole(Mesh& m, float threshold=0.02) {
                     fill_hole(m, path);
                 }
             }
-    unify_face_normals(m);
 }
 
 void mesh_offset(Mesh& m, float offset) {
@@ -1044,7 +1042,6 @@ void shrink_edge(Mesh& m) {
             length.push_back((m.vertex[i] - m.vertex[j]).length());
     float avg = average(length);
     float threshold = avg / 2;
-    cout << avg << ' ' << threshold << endl;
     vector<int> p(m.vertex.size());
     for (int i = 0; i < p.size(); ++i)
         p[i] = i;
@@ -1055,7 +1052,6 @@ void shrink_edge(Mesh& m) {
             for (int j : m.adj_vertex[i])
                 if (!border[j] && parent(p, j) == j) {
                     if ((m.vertex[i] - m.vertex[j]).length() < threshold) {
-                        cout << "Merge " << i << ' ' << j << endl;
                         merge_vertex(m, i, j);
                         m.vertex[i] = (m.vertex[i] + m.vertex[j]) / 2;
                         join(p, i, j);

@@ -185,7 +185,6 @@ void Mesh::calculate_vertex_normal() {
 }
 
 void Mesh::clean() {
-    DEBUG()
     remove_unused_vertex();
     remove_unused_texture();
 }
