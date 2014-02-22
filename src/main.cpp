@@ -19,6 +19,8 @@ void usage() {
     cout << "l : remove face that the largest component remains" << endl;
     cout << "c : center by average vertex positions" << endl;
     cout << "r : fix entire mesh orientation" << endl;
+    cout << "a <a> <b> <c> <d> : partition by plane ax + by + cz + d = 0" << endl;
+    cout << "p <a> <b> <c> <d> : project by plane ax + by + cz + d = 0" << endl;
     cout << "example: ./Geo fengkan_10000.obj fengkan_20000.obj c r l" << endl;
     exit(-1);
 }
@@ -42,6 +44,22 @@ int main(int argc, char** argv) {
             center_positioning_by_averaging_vertex(m);
         else if (strcmp(argv[t], "r") == 0)
             rotate_mesh(m);
+        else if (strcmp(argv[t], "a") == 0) {
+            Plane p;
+            p.a = atof(argv[++t]);
+            p.b = atof(argv[++t]);
+            p.c = atof(argv[++t]);
+            p.d = atof(argv[++t]);
+            partition_by_plane(m, p);
+        } else if (strcmp(argv[t], "p") == 0) {
+            Plane p;
+            p.a = atof(argv[++t]);
+            p.b = atof(argv[++t]);
+            p.c = atof(argv[++t]);
+            p.d = atof(argv[++t]);
+            project_by_plane(m, p);
+        } else
+            usage();
         END_TIME(argv[t])
         ++t;
     }
