@@ -12,8 +12,8 @@
 
 class Face {
 public:
-    int vertex_index[3] {0, 0, 0};
-    int texture_index[3] {0, 0, 0};
+    int vertex_index[3];
+    int texture_index[3];
     Face() {
         vertex_index[0] = 0;
         vertex_index[1] = 0;
