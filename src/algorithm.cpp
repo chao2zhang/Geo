@@ -19,7 +19,6 @@ using std::cerr;
 using std::endl;
 using std::iterator_traits;
 using std::next;
-using std::isnan;
 
 inline static float safe_acos(float x) {
     if (x > ONE_EPS)
