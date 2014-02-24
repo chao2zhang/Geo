@@ -1,1 +1,1 @@
-bin\Release\Geo.exe tests\fengkan_10000.obj tests\fengkan_60000.obj c r l a 0 1 0 0.8 a 0 0 1 0.5 p 0 0 1 0.6 e 0 1 0 0.8 f 0 0 1 0.6 u
+bin\Release\Geo.exe tests\fengkan_10000.obj tests\fengkan_60000.obj c r l y -0.8 z -0.5 zp -0.6 ye -0.8 zf -0.6 u
