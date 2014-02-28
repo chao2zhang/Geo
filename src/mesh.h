@@ -58,6 +58,7 @@ public:
     std::vector<std::vector<int> > adj_vertex;
     std::vector<std::vector<int> > faces_of_vertex;
     std::vector<std::vector<int> > adj_face;
+    Point3f bbox[2];
 protected:
     void remove_unused_vertex();
     void remove_unused_texture();
@@ -66,6 +67,7 @@ protected:
     void calculate_faces_of_vertex();
     void calculate_face_normal();
     void calculate_vertex_normal();
+    void calculate_bbox();
     void connect_vertex(int u, int v);
     void connect_face(int u, int v);
 public:

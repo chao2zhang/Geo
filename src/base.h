@@ -6,6 +6,7 @@
 #include <utility>
 #include <cmath>
 #include <cstdlib>
+#include <cfloat>
 
 const float EPS           = 1e-5;
 const float ONE_EPS       = 1 - EPS;

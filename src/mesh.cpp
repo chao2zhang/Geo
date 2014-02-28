@@ -184,6 +184,19 @@ void Mesh::calculate_vertex_normal() {
     }
 }
 
+void Mesh::calculate_bbox() {
+    bbox[1] = Point3f(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+    bbox[0] = Point3f(FLT_MAX, FLT_MAX, FLT_MAX);
+    for (const Point3f& p : vertex) {
+        if (p.x[0] < bbox[0].x[0]) bbox[0].x[0] = p.x[0];
+        if (p.x[1] < bbox[0].x[1]) bbox[0].x[1] = p.x[1];
+        if (p.x[2] < bbox[0].x[2]) bbox[0].x[2] = p.x[2];
+        if (p.x[0] > bbox[1].x[0]) bbox[1].x[0] = p.x[0];
+        if (p.x[1] > bbox[1].x[1]) bbox[1].x[1] = p.x[1];
+        if (p.x[2] > bbox[1].x[2]) bbox[1].x[2] = p.x[2];
+    }
+}
+
 void Mesh::clean() {
     remove_unused_vertex();
     remove_unused_texture();
@@ -196,6 +209,7 @@ void Mesh::update() {
     calculate_adj_face();
     calculate_face_normal();
     calculate_vertex_normal();
+    calculate_bbox();
 }
 
 void Mesh::load(istream& in) {
