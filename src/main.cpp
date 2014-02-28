@@ -22,8 +22,8 @@ void usage() {
     cout << "u : unify face normal orientation" << endl;
     cout << "y <y0> : partition by plane y = y0" << endl;
     cout << "z <z0> : partition by plane z = z0" << endl;
-    cout << "ya <ratio_y> : partition by plane y = ymin * (1 - ratio) + ymax * ratio" << endl;
-    cout << "za <ratio_z> : partition by plane z = zmin * (1 - ratio) + zmax * ratio" << endl;
+    cout << "ya <ratio_y> : ratio_y in (0, 1), partition by plane y = ymin * (1 - ratio) + ymax * ratio" << endl;
+    cout << "za <ratio_z> : ratio_z in (0, 1), partition by plane z = zmin * (1 - ratio) + zmax * ratio" << endl;
     cout << "zh <ratio> : partition by plane z = zmax - ratio * (ymax - ymin)" << endl;
     cout << "xr <angle> : rotate around x-axis by angle" << endl;
     cout << "yr <angle> : rotate around y-axis by angle" << endl;
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
             partition_by_plane(m, Plane(0, 0, -1, m.bbox[0].x[2] * (1 - r) + m.bbox[1].x[2] * r));
         } else if (strcmp(argv[t], "zh") == 0) {
             float r = atof(argv[++t]);
-            partition_by_plane(m, Plane(0, 0, -1, m.bbox[0].x[2] - r * (m.bbox[1].x[1] - m.bbox[0].x[1])));
+            partition_by_plane(m, Plane(0, 0, -1, m.bbox[1].x[2] - r * (m.bbox[1].x[1] - m.bbox[0].x[1])));
         } else if (strcmp(argv[t], "yd") == 0)
             remove_face_by_plane(m, Plane(0, -1, 0, m.bbox[0].x[1]));
         else if (strcmp(argv[t], "zp") == 0)
