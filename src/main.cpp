@@ -24,12 +24,13 @@ void usage() {
     cout << "z <z0> : partition by plane z = z0" << endl;
     cout << "ya <ratio_y> : partition by plane y = ymin * (1 - ratio) + ymax * ratio" << endl;
     cout << "za <ratio_z> : partition by plane z = zmin * (1 - ratio) + zmax * ratio" << endl;
+    cout << "zh <ratio> : partition by plane z = zmax - ratio * (ymax - ymin)" << endl;
     cout << "xr <angle> : rotate around x-axis by angle" << endl;
     cout << "yr <angle> : rotate around y-axis by angle" << endl;
     cout << "zr <angle> : rotate around z-axis by angle" << endl;
     cout << "yd : remove face by plane y = ymin" << endl;
-    cout << "zp <z0> : project by plane z = z0" << endl;
-    cout << "zf <z0> : fill max border face by plane z = z0" << endl;
+    cout << "zp <z0> : project by plane z = zmin - z0" << endl;
+    cout << "zf : fill max border face by plane z = zmin" << endl;
     cout << "a : analyze along z-axis" << endl;
     cout << "s <file>: save to file" << endl;
     cout << "example: ./Geo fengkan_10000.obj c r l s fengkan_20000.obj" << endl;
@@ -76,12 +77,15 @@ int main(int argc, char** argv) {
         } else if (strcmp(argv[t], "za") == 0) {
             float r = atof(argv[++t]);
             partition_by_plane(m, Plane(0, 0, -1, m.bbox[0].x[2] * (1 - r) + m.bbox[1].x[2] * r));
+        } else if (strcmp(argv[t], "zh") == 0) {
+            float r = atof(argv[++t]);
+            partition_by_plane(m, Plane(0, 0, -1, m.bbox[0].x[2] - r * (m.bbox[1].x[1] - m.bbox[0].x[1])));
         } else if (strcmp(argv[t], "yd") == 0)
             remove_face_by_plane(m, Plane(0, -1, 0, m.bbox[0].x[1]));
         else if (strcmp(argv[t], "zp") == 0)
-            project_by_plane(m, Plane(0, 0, -1, atof(argv[++t])));
+            project_by_plane(m, Plane(0, 0, -1, m.bbox[0].x[2] - atof(argv[++t])));
         else if (strcmp(argv[t], "zf") == 0)
-            fill_max_border_face_by_plane(m, Plane(0, 0, -1, atof(argv[++t])));
+            fill_max_border_face_by_plane(m, Plane(0, 0, -1, m.bbox[0].x[2]));
         else if (strcmp(argv[t], "a") == 0)
             analyze_z(m);
         else if (strcmp(argv[t], "s") == 0) {

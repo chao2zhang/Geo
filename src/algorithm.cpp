@@ -863,6 +863,10 @@ void remove_face_by_largest_component(Mesh& m) {
     m.update();
 }
 
+void remove_face_by_long_edge(Mesh& m, float threshold) {
+
+}
+
 void get_max_border_path_by_plane(Mesh& m, const Plane& p, list<int>& max_path) {
     vector<vector<int> > adj_vertex(m.vertex.size());
     gen_border_graph(m, adj_vertex);
