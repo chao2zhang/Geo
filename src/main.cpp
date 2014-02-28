@@ -21,25 +21,29 @@ void usage() {
     cout << "r : fix entire mesh orientation" << endl;
     cout << "u : unify face normal orientation" << endl;
     cout << "y <y0> : partition by plane y = y0" << endl;
-    cout << "ye <y0> : remove face by plane y = y0" << endl;
     cout << "z <z0> : partition by plane z = z0" << endl;
+    cout << "xr <angle> : rotate around x-axis by angle" << endl;
+    cout << "yr <angle> : rotate around y-axis by angle" << endl;
+    cout << "zr <angle> : rotate around z-axis by angle" << endl;
+    cout << "ye <y0> : remove face by plane y = y0" << endl;
     cout << "zp <z0> : project by plane z = z0" << endl;
     cout << "zf <z0> : fill max border face by plane z = z0" << endl;
-    cout << "example: ./Geo fengkan_10000.obj fengkan_20000.obj c r l" << endl;
+    cout << "a : analyze along z-axis" << endl;
+    cout << "s <file>: save to file" << endl;
+    cout << "example: ./Geo fengkan_10000.obj c r l s fengkan_20000.obj" << endl;
     exit(-1);
 }
 
 int main(int argc, char** argv) {
-    if (argc < 4)
+    if (argc <= 3)
         usage();
     ifstream in(argv[1]);
-    ofstream out(argv[2]);
     clock_t f;
     Mesh m;
     m.load(in);
     in.close();
 
-    int t = 3;
+    int t = 2;
     while (t < argc) {
         START_TIME()
         char* cur_op = argv[t];
@@ -48,26 +52,38 @@ int main(int argc, char** argv) {
         else if (strcmp(argv[t], "c") == 0)
             center_positioning_by_averaging_vertex(m);
         else if (strcmp(argv[t], "r") == 0)
-            rotate_mesh(m);
+            auto_rotate_mesh(m);
         else if (strcmp(argv[t], "u") == 0)
             unify_face_normals(m);
-        else if (strcmp(argv[t], "y") == 0)
+        else if (strcmp(argv[t], "xr") == 0) {
+            float a = atof(argv[++t]);
+            rotate_mesh(m, Point3f(1, 0, 0), deg_to_rad(a));
+        } else if (strcmp(argv[t], "yr") == 0) {
+            float a = atof(argv[++t]);
+            rotate_mesh(m, Point3f(0, 1, 0), deg_to_rad(a));
+        } else if (strcmp(argv[t], "zr") == 0) {
+            float a = atof(argv[++t]);
+            rotate_mesh(m, Point3f(0, 0, 1), deg_to_rad(a));
+        } else if (strcmp(argv[t], "y") == 0)
             partition_by_plane(m, Plane(0, -1, 0, atof(argv[++t])));
-        else if (strcmp(argv[t], "ye") == 0)
-            remove_face_by_plane(m, Plane(0, -1, 0, atof(argv[++t])));
         else if (strcmp(argv[t], "z") == 0)
             partition_by_plane(m, Plane(0, 0, -1, atof(argv[++t])));
+        else if (strcmp(argv[t], "ye") == 0)
+            remove_face_by_plane(m, Plane(0, -1, 0, atof(argv[++t])));
         else if (strcmp(argv[t], "zp") == 0)
             project_by_plane(m, Plane(0, 0, -1, atof(argv[++t])));
         else if (strcmp(argv[t], "zf") == 0)
             fill_max_border_face_by_plane(m, Plane(0, 0, -1, atof(argv[++t])));
-        else
+        else if (strcmp(argv[t], "a") == 0)
+            analyze_z(m);
+        else if (strcmp(argv[t], "s") == 0) {
+            ofstream out(argv[++t]);
+            m.save(out);
+            out.close();
+        } else
             usage();
         END_TIME(cur_op)
         ++t;
     }
-
-    m.save(out);
-    out.close();
     return 0;
 }

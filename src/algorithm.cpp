@@ -5,6 +5,7 @@
 #include <queue>
 #include <utility>
 #include <cmath>
+#include <cfloat>
 #include <cassert>
 #include <algorithm>
 
@@ -373,10 +374,8 @@ void gen_border_graph(const Mesh& m, vector<vector<int> >& adj_vertex) {
 bool euler_simple_circuit(vector<int>& path, vector<bool>& visited, vector<vector<int> >& adj_vertex, int s, int u) {
     if (visited[s] && u == s)
         return true;
-    if (visited[u]) {
-        while (path.back() != u) path.pop_back();
+    if (visited[u])
         return false;
-    }
     visited[u] = true;
     path.push_back(u);
     for (int i = 0; i < adj_vertex[u].size(); ++i)
@@ -394,6 +393,8 @@ bool euler_simple_circuit(vector<int>& path, vector<bool>& visited, vector<vecto
             adj_vertex[v][j] = u;
             adj_vertex[u][i] = v;
         }
+    visited[u] = false;
+    path.pop_back();
     return false;
 }
 
@@ -569,6 +570,7 @@ void project_by_plane(Mesh& m, const Plane& p) {
     vector<vector<int> > adj_vertex(v);
     gen_border_graph(m, adj_vertex);
     vector<int> max_path;
+    DEBUG()
     for (int i = 0; i < v; ++i)
         for (int j = 0; j < adj_vertex[i].size(); ++j)
             if (adj_vertex[i][j] != -1) {
@@ -577,6 +579,7 @@ void project_by_plane(Mesh& m, const Plane& p) {
                 if (path.size() > max_path.size())
                     max_path = path;
             }
+    DEBUG()
     for (int i = 0; i < max_path.size(); ++i) {
         Point3f&& r = get_vertical_point(m.vertex[max_path[i]], p);
         m.vertex.push_back(r);
@@ -1175,6 +1178,28 @@ void rotate_point(float rot[3][3], Point3f& p) {
     p = np;
 }
 
+void rotate_mesh(Mesh& m, const Point3f& axis, float angle) {
+    float cosa = cos(angle);
+    float sina = sin(angle);
+    float onec = 1 - cosa;
+    float rot[3][3];
+    rot[0][0] = axis.x[0] * axis.x[0] * onec + cosa;
+    rot[0][1] = axis.x[0] * axis.x[1] * onec - axis.x[2] * sina;
+    rot[0][2] = axis.x[0] * axis.x[2] * onec + axis.x[1] * sina;
+    rot[1][0] = axis.x[1] * axis.x[0] * onec + axis.x[2] * sina;
+    rot[1][1] = axis.x[1] * axis.x[1] * onec + cosa;
+    rot[1][2] = axis.x[1] * axis.x[2] * onec - axis.x[0] * sina;
+    rot[2][0] = axis.x[2] * axis.x[0] * onec - axis.x[1] * sina;
+    rot[2][1] = axis.x[2] * axis.x[1] * onec + axis.x[0] * sina;
+    rot[2][2] = axis.x[2] * axis.x[2] * onec + cosa;
+    for (Point3f& p : m.vertex)
+        rotate_point(rot, p);
+    for (Point3f& p : m.vertex_normal)
+        rotate_point(rot, p);
+    for (Point3f& p : m.face_normal)
+        rotate_point(rot, p);
+}
+
 void rotate_mesh(Mesh& m, const Point3f& from, const Point3f& to) {
     // No need to rotate if the total orientation is the same with target destination.
     if (from * to > ONE_EPS)
@@ -1190,28 +1215,11 @@ void rotate_mesh(Mesh& m, const Point3f& from, const Point3f& to) {
     // Rotate around u
     Point3f&& u = cross_product(from, to);
     u.normalize();
-    float cosa = from * to;
-    float sina = sqrt(1 - cosa * cosa);
-    float onec = 1 - cosa;
-    float rot[3][3];
-    rot[0][0] = u.x[0] * u.x[0] * onec + cosa;
-    rot[0][1] = u.x[0] * u.x[1] * onec - u.x[2] * sina;
-    rot[0][2] = u.x[0] * u.x[2] * onec + u.x[1] * sina;
-    rot[1][0] = u.x[1] * u.x[0] * onec + u.x[2] * sina;
-    rot[1][1] = u.x[1] * u.x[1] * onec + cosa;
-    rot[1][2] = u.x[1] * u.x[2] * onec - u.x[0] * sina;
-    rot[2][0] = u.x[2] * u.x[0] * onec - u.x[1] * sina;
-    rot[2][1] = u.x[2] * u.x[1] * onec + u.x[0] * sina;
-    rot[2][2] = u.x[2] * u.x[2] * onec + cosa;
-    for (Point3f& p : m.vertex)
-        rotate_point(rot, p);
-    for (Point3f& p : m.vertex_normal)
-        rotate_point(rot, p);
-    for (Point3f& p : m.face_normal)
-        rotate_point(rot, p);
+    float angle = acos(from * to);
+    rotate_mesh(m, u, angle);
 }
 
-void rotate_mesh(Mesh& m) {
+void auto_rotate_mesh(Mesh& m) {
     Point3f t;
     Point3f z(0, 0, 1);
     for (int i = 0; i < m.face.size(); ++i)
@@ -1222,4 +1230,13 @@ void rotate_mesh(Mesh& m) {
     rotate_mesh(m,
                 Point3f(0, 1, 0),
                 Point3f(1, 0, 0));
+}
+
+void analyze_z(const Mesh& m) {
+    float maxz = -FLT_MAX;
+    float minz = FLT_MAX;
+    for (const Point3f& p : m.vertex) {
+        if (p.x[2] > maxz) maxz = p.x[2];
+        if (p.x[2] < minz) minz = p.x[2];
+    }
 }

@@ -20,6 +20,9 @@ void remove_face_by_plane(Mesh& m, const Plane& p);
 void remove_face_by_largest_component(Mesh& m);
 void fill_max_border_face_by_plane(Mesh& m, const Plane& p);
 void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p);
-void rotate_mesh(Mesh& m);
+void auto_rotate_mesh(Mesh& m);
+void rotate_mesh(Mesh& m, const Point3f& axis, float angle);
+void rotate_mesh(Mesh& m, const Point3f& from, const Point3f& to);
+void analyze_z(const Mesh& m);
 
 #endif

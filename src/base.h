@@ -26,6 +26,14 @@ const float COS_60 = 0.5;
 const float COS_75 = 0.258819;
 const float COS_90 = 0;
 
+inline static float deg_to_rad(float d) {
+    return d / 180 * PI;
+}
+
+inline static float rad_to_deg(float r) {
+    return r / PI * 180;
+}
+
 /**
  * Circular list function begin
  */
