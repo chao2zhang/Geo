@@ -1075,6 +1075,8 @@ void shrink_edge(Mesh& m) {
 }
 
 void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
+    Point3f bbox[2];
+    memcpy(bbox, m.bbox, sizeof(bbox));
     list<int> path;
     get_max_border_path_by_plane(m, p, path);
 
@@ -1123,10 +1125,21 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
     m.face.erase(m.face.begin() + f, m.face.end());
     m.face.insert(m.face.end(), n.face.begin(), n.face.end());
     m.update();
+    if (m.bbox[0].x[0] < bbox[0].x[0] - EPS ||
+        m.bbox[0].x[1] < bbox[0].x[1] - EPS ||
+        m.bbox[0].x[2] < bbox[0].x[2] - EPS ||
+        m.bbox[1].x[0] > bbox[1].x[0] + EPS ||
+        m.bbox[1].x[1] > bbox[1].x[1] + EPS ||
+        m.bbox[1].x[2] > bbox[1].x[2] + EPS) {
+        cout << "Failed fill face" << endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 
 void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
+    Point3f bbox[2];
+    memcpy(bbox, m.bbox, sizeof(bbox));
     list<int> path;
     get_max_border_path_by_plane(m, p, path);
     Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
@@ -1172,6 +1185,15 @@ void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
         last_size = path.size();
     }
     m.update();
+    if (m.bbox[0].x[0] < bbox[0].x[0] - EPS ||
+        m.bbox[0].x[1] < bbox[0].x[1] - EPS ||
+        m.bbox[0].x[2] < bbox[0].x[2] - EPS ||
+        m.bbox[1].x[0] > bbox[0].x[0] + EPS ||
+        m.bbox[1].x[1] > bbox[0].x[1] + EPS ||
+        m.bbox[1].x[2] > bbox[0].x[2] + EPS) {
+        cout << "Failed fill face" << endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 void rotate_point(float rot[3][3], Point3f& p) {

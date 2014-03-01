@@ -16,25 +16,26 @@ clock_t f;
 void usage() {
     cout << "./Geo <in_obj> <out_obj> <operation_1> <operation_2> ..." << endl;
     cout << "operations:" << endl;
-    cout << "l : remove face that the largest component remains" << endl;
-    cout << "c : center by average vertex positions" << endl;
-    cout << "r : fix entire mesh orientation" << endl;
-    cout << "u : unify face normal orientation" << endl;
-    cout << "y <y0> : partition by plane y = y0" << endl;
-    cout << "z <z0> : partition by plane z = z0" << endl;
-    cout << "ya <ratio_y> : ratio_y in (0, 1), partition by plane y = ymin * (1 - ratio) + ymax * ratio" << endl;
-    cout << "za <ratio_z> : ratio_z in (0, 1), partition by plane z = zmin * (1 - ratio) + zmax * ratio" << endl;
-    cout << "zh <ratio> : partition by plane z = zmax - ratio * (ymax - ymin)" << endl;
-    cout << "xr <angle> : rotate around x-axis by angle" << endl;
-    cout << "yr <angle> : rotate around y-axis by angle" << endl;
-    cout << "zr <angle> : rotate around z-axis by angle" << endl;
-    cout << "yd : remove face by plane y = ymin" << endl;
-    cout << "zp <z0> : project by plane z = zmin - z0" << endl;
-    cout << "zf : fill max border face by plane z = zmin" << endl;
-    cout << "a : analyze along z-axis" << endl;
-    cout << "s <file>: save to file" << endl;
+    cout << "\tl : remove face that the largest component remains" << endl;
+    cout << "\tc : center by average vertex positions" << endl;
+    cout << "\tr : fix entire mesh orientation" << endl;
+    cout << "\tu : unify face normal orientation" << endl;
+    cout << "\ty <y0> : partition by plane y = y0" << endl;
+    cout << "\tz <z0> : partition by plane z = z0" << endl;
+    cout << "\tya <ratio_y> : ratio_y in (0, 1), partition by plane y = ymin * (1 - ratio) + ymax * ratio" << endl;
+    cout << "\tza <ratio_z> : ratio_z in (0, 1), partition by plane z = zmin * (1 - ratio) + zmax * ratio" << endl;
+    cout << "\tzh <ratio> : partition by plane z = zmax - ratio * (ymax - ymin)" << endl;
+    cout << "\txr <angle> : rotate around x-axis by angle" << endl;
+    cout << "\tyr <angle> : rotate around y-axis by angle" << endl;
+    cout << "\tzr <angle> : rotate around z-axis by angle" << endl;
+    cout << "\tyd : remove face by plane y = ymin" << endl;
+    cout << "\tzp <z0> : project by plane z = zmin - z0" << endl;
+    cout << "\tzf : fill max border face by plane z = zmin" << endl;
+    cout << "\ta : analyze along z-axis" << endl;
+    cout << "\ts <file> : save to file" << endl;
+    cout << "return value: 0 for success, 1 for failure" << endl;
     cout << "example: ./Geo fengkan_10000.obj c r l s fengkan_20000.obj" << endl;
-    exit(-1);
+    exit(EXIT_FAILURE);
 }
 
 int main(int argc, char** argv) {
@@ -97,5 +98,5 @@ int main(int argc, char** argv) {
         END_TIME(cur_op)
         ++t;
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
