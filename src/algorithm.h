@@ -18,12 +18,11 @@ void mark_spike(Mesh& m, float dot_product=0);
 void mesh_offset(Mesh& m, float offset);
 void remove_face_by_plane(Mesh& m, const Plane& p);
 void remove_face_by_largest_component(Mesh& m);
-void remove_face_by_long_edge(Mesh& m, float threshold);
+void remove_face_by_long_edge(Mesh& m, float rate=5);
 void fill_max_border_face_by_plane(Mesh& m, const Plane& p);
 void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p);
 void auto_rotate_mesh(Mesh& m);
 void rotate_mesh(Mesh& m, const Point3f& axis, float angle);
 void rotate_mesh(Mesh& m, const Point3f& from, const Point3f& to);
-void analyze_z(const Mesh& m);
 
 #endif

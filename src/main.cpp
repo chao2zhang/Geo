@@ -22,16 +22,16 @@ void usage() {
     cout << "\tu : unify face normal orientation" << endl;
     cout << "\ty <y0> : partition by plane y = y0" << endl;
     cout << "\tz <z0> : partition by plane z = z0" << endl;
+    cout << "\tzh <ratio> : partition by plane z = zmax - ratio * (ymax - ymin)" << endl;
     cout << "\tya <ratio_y> : ratio_y in (0, 1), partition by plane y = ymin * (1 - ratio) + ymax * ratio" << endl;
     cout << "\tza <ratio_z> : ratio_z in (0, 1), partition by plane z = zmin * (1 - ratio) + zmax * ratio" << endl;
-    cout << "\tzh <ratio> : partition by plane z = zmax - ratio * (ymax - ymin)" << endl;
     cout << "\txr <angle> : rotate around x-axis by angle" << endl;
     cout << "\tyr <angle> : rotate around y-axis by angle" << endl;
     cout << "\tzr <angle> : rotate around z-axis by angle" << endl;
     cout << "\tyd : remove face by plane y = ymin" << endl;
     cout << "\tzp <z0> : project by plane z = zmin - z0" << endl;
     cout << "\tzf : fill max border face by plane z = zmin" << endl;
-    cout << "\ta : analyze along z-axis" << endl;
+    cout << "\te <rate> : remove face by long edge with rate(normally 10)" << endl;
     cout << "\ts <file> : save to file" << endl;
     cout << "return value: 0 for success, 1 for failure" << endl;
     cout << "example: ./Geo fengkan_10000.obj c r l s fengkan_20000.obj" << endl;
@@ -39,7 +39,7 @@ void usage() {
 }
 
 int main(int argc, char** argv) {
-    if (argc <= 3)
+    if (argc < 3)
         usage();
     ifstream in(argv[1]);
     clock_t f;
@@ -87,9 +87,10 @@ int main(int argc, char** argv) {
             project_by_plane(m, Plane(0, 0, -1, m.bbox[0].x[2] - atof(argv[++t])));
         else if (strcmp(argv[t], "zf") == 0)
             fill_max_border_face_by_plane(m, Plane(0, 0, -1, m.bbox[0].x[2]));
-        else if (strcmp(argv[t], "a") == 0)
-            analyze_z(m);
-        else if (strcmp(argv[t], "s") == 0) {
+        else if (strcmp(argv[t], "e") == 0) {
+            float r = atof(argv[++t]);
+            remove_face_by_long_edge(m, r);
+        } else if (strcmp(argv[t], "s") == 0) {
             ofstream out(argv[++t]);
             m.save(out);
             out.close();

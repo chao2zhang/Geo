@@ -343,6 +343,16 @@ void merge_vertex(Mesh& m, int u, int v) {
 }
 
 /**
+ * Set mark[f] to true if (u, v) is in Face f
+ */
+void mark_face_of_edge(const Mesh& m, int u, int v, vector<bool>& mark) {
+    for (int f : m.faces_of_vertex[v])
+        if (find(m.faces_of_vertex[u].begin(), m.faces_of_vertex[u].end(), f) !=
+                 m.faces_of_vertex[u].end())
+            mark[f] = true;
+}
+
+/**
  * Generate vertices at the border.
  */
 void gen_border_vertex(const Mesh& m, vector<bool>& is_border) {
@@ -863,8 +873,27 @@ void remove_face_by_largest_component(Mesh& m) {
     m.update();
 }
 
-void remove_face_by_long_edge(Mesh& m, float threshold) {
+void remove_face_by_long_edge(Mesh& m, float rate) {
+    vector<float> length;
+    for (int i = 0; i < m.vertex.size(); ++i)
+        for (int j : m.adj_vertex[i])
+            if (j > i)
+                length.push_back((m.vertex[i] - m.vertex[j]).length());
+    float avg = average(length);
+    float sdv = standard_deviation(length);
+    float limit = avg + rate * sdv;
 
+    vector<bool> remove_faces(m.face.size(), false);
+    for (int i = 0; i < m.vertex.size(); ++i)
+        for (int j : m.adj_vertex[i])
+            if (j > i && (m.vertex[i] - m.vertex[j]).length() > limit)
+                mark_face_of_edge(m, i, j, remove_faces);
+
+    vector<Face> face;
+    for (int i = 0; i < m.face.size(); ++i)
+        if (!remove_faces[i])
+            face.push_back(m.face[i]);
+    m.face.swap(face);
 }
 
 void get_max_border_path_by_plane(Mesh& m, const Plane& p, list<int>& max_path) {
@@ -1256,13 +1285,4 @@ void auto_rotate_mesh(Mesh& m) {
     rotate_mesh(m,
                 Point3f(0, 1, 0),
                 Point3f(1, 0, 0));
-}
-
-void analyze_z(const Mesh& m) {
-    float maxz = -FLT_MAX;
-    float minz = FLT_MAX;
-    for (const Point3f& p : m.vertex) {
-        if (p.x[2] > maxz) maxz = p.x[2];
-        if (p.x[2] < minz) minz = p.x[2];
-    }
 }
