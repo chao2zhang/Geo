@@ -403,12 +403,12 @@ void brute_force_fill_path(Mesh& m, const list<int>& p) {
              * uvw is a valid triangle
              * iff uvw < 180 degree and no other vertex lies inside uvw and uvw is a triangle
              */
-            bool convex = cross_product(v - u, w - v) * inner_orientation > EPS;
+            bool convex = cross_product(v - u, w - v) * inner_orientation > 0;
             if (!convex) {
                 ++i;
                 continue;
             }
-            bool triangle = cross_product(u - v, w - v).length() > EPS;
+            bool triangle = cross_product(u - v, w - v).length() > EPS_SQUARE;
             if (!triangle) {
                 ++i;
                 continue;
@@ -428,7 +428,7 @@ void brute_force_fill_path(Mesh& m, const list<int>& p) {
         }
         if (path.size() == last_size) {
             cout << "Fill failed" << endl;
-            exit(EXIT_FAILURE);
+            break;
         }
         last_size = path.size();
     }
