@@ -82,9 +82,9 @@ int main(int argc, char** argv) {
             float r = atof(argv[++t]);
             partition_by_plane(m, Plane(0, 0, -1, m.bbox[1].x[2] - r * (m.bbox[1].x[1] - m.bbox[0].x[1])));
         } else if (strcmp(argv[t], "yd") == 0)
-            remove_face_by_plane(m, Plane(0, -1, 0, m.bbox[0].x[1]));
+            remove_face_by_y_plane(m, m.bbox[0].x[1]);
         else if (strcmp(argv[t], "zp") == 0)
-            project_by_plane(m, Plane(0, 0, -1, m.bbox[0].x[2] - atof(argv[++t])));
+            project_by_z_plane(m, m.bbox[0].x[2] - atof(argv[++t]));
         else if (strcmp(argv[t], "zf") == 0)
             fill_max_border_face_by_plane(m, Plane(0, 0, -1, m.bbox[0].x[2]));
         else if (strcmp(argv[t], "e") == 0) {

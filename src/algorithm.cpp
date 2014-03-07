@@ -133,6 +133,10 @@ inline static void get_shared_edge(const Mesh& m, int f, int g, int& u, int& v, 
         rg = m.face[g].vertex_index[2];
 }
 
+inline static bool is_ymin(const Mesh& m, const Point3f& p) {
+    return fabs(m.bbox[0].x[1] - p.x[1]) < EPS;
+}
+
 /**
  * Tell if Point p lies inside triangle xyz
  */
@@ -173,7 +177,7 @@ inline static bool is_more_than_bounding_box_along_axis(const Point3f& x, const 
 }
 
 /**
- * Tell if Line xy intersects with Line pq
+ * If x,y,p,q already shares a plane, tell if Line xy intersects with Line pq
  */
 inline static bool is_intersected(const Point3f& x, const Point3f& y, const Point3f& p, const Point3f& q) {
     if (is_less_than_bounding_box_along_axis(x, y, p, 0) &&
@@ -376,6 +380,61 @@ void gen_border_graph(const Mesh& m, vector<vector<int> >& adj_vertex) {
 }
 
 /**
+ * Fill face along path(all vertices on path are on the same plane)
+ */
+void brute_force_fill_path(Mesh& m, const list<int>& p) {
+    if (p.size() <= 2)
+        return;
+    list<int> path(p.begin(), p.end());
+    Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
+    int last_size = path.size();
+    for (int v : p) {
+        cout << v << ' ';
+    }
+    cout << endl;
+    while (path.size() > 2) {
+        for (list<int>::iterator i = path.begin(); i != path.end(); ) {
+            list<int>::iterator j = prev<list<int> >(path, i);
+            list<int>::iterator k = next<list<int> >(path, i);
+            Point3f& u = m.vertex[*j];
+            Point3f& v = m.vertex[*i];
+            Point3f& w = m.vertex[*k];
+            /*
+             * uvw is a valid triangle
+             * iff uvw < 180 degree and no other vertex lies inside uvw and uvw is a triangle
+             */
+            bool convex = cross_product(v - u, w - v) * inner_orientation > EPS;
+            if (!convex) {
+                ++i;
+                continue;
+            }
+            bool triangle = cross_product(u - v, w - v).length() > EPS;
+            if (!triangle) {
+                ++i;
+                continue;
+            }
+            bool inside = false;
+            for (list<int>::iterator p = path.begin(); p != path.end(); ++p)
+                if (p != i && p != j && p != k && is_inside_triangle(u, v, w, m.vertex[*p])) {
+                    inside = true;
+                    break;
+                }
+            if (inside) {
+                ++i;
+                continue;
+            }
+            m.face.push_back(Face(*i, *j, *k));
+            i = path.erase(i);
+        }
+        if (path.size() == last_size) {
+            cout << "Fill failed" << endl;
+            exit(EXIT_FAILURE);
+        }
+        last_size = path.size();
+    }
+}
+
+/**
  * Modified Euler circuit algorithm.
  *
  * Instead of finding a euler circuit, find its sub-circuit where no vertex is visited twice.
@@ -575,12 +634,13 @@ void partition_by_plane(Mesh& m, const Plane& p) {
     m.update();
 }
 
-void project_by_plane(Mesh& m, const Plane& p) {
+void project_by_z_plane(Mesh& m, float z) {
+    Plane p(0, 0, 1, -z);
     int v = m.vertex.size();
+
     vector<vector<int> > adj_vertex(v);
     gen_border_graph(m, adj_vertex);
     vector<int> max_path;
-    DEBUG()
     for (int i = 0; i < v; ++i)
         for (int j = 0; j < adj_vertex[i].size(); ++j)
             if (adj_vertex[i][j] != -1) {
@@ -589,31 +649,62 @@ void project_by_plane(Mesh& m, const Plane& p) {
                 if (path.size() > max_path.size())
                     max_path = path;
             }
-    DEBUG()
+
     for (int i = 0; i < max_path.size(); ++i) {
         Point3f&& r = get_vertical_point(m.vertex[max_path[i]], p);
         m.vertex.push_back(r);
     }
-    for (int k = 0; k < max_path.size(); ++k) {
-        int i = max_path[k];
-        int j = max_path[(k + 1) % max_path.size()];
-        int iu = v + k;
-        int ju = v + (k + 1) % max_path.size();
-        Face f;
-        f.vertex_index[0] = j;
-        f.vertex_index[1] = i;
-        f.vertex_index[2] = iu;
-        get_texture_with_edge(m, i, j, f.texture_index[1], f.texture_index[0]);
-        f.texture_index[2] = f.texture_index[1];
-        m.face.push_back(f);
-
-        f.vertex_index[0] = j;
-        f.vertex_index[1] = iu;
-        f.vertex_index[2] = ju;
-        get_texture_with_edge(m, i, j, f.texture_index[1], f.texture_index[2]);
-        f.texture_index[0] = f.texture_index[2];
-        m.face.push_back(f);
+    vector<bool> path_valid(max_path.size(), true);
+    for (int i = 0; i < max_path.size(); ++i) {
+        Point3f& r = m.vertex[max_path[i]];
+        Point3f& ru = m.vertex[v + i];
+        if (!is_ymin(m, r))
+            continue;
+        for (int j = 0; j < max_path.size(); ++j) {
+            int k = (j + 1) % max_path.size();
+            if (j != i && k != i) {
+                Point3f& p = m.vertex[max_path[j]];
+                Point3f& q = m.vertex[max_path[k]];
+                if (!is_ymin(m, p) || !is_ymin(m, q))
+                    continue;
+                if (is_intersected(r, ru, p, q))
+                    path_valid[i] = false;
+            }
+        }
     }
+
+    for (int k = 0; k < max_path.size(); ++k)
+        if (path_valid[k]) {
+            int next_valid = k;
+            do {
+                next_valid = (next_valid + 1) % max_path.size();
+            } while (!path_valid[next_valid]);
+            if (next_valid != (k + 1) % max_path.size()) {
+                list<int> sub_path;
+                for (int i = k; i != next_valid; i = (i + 1) % max_path.size())
+                    sub_path.push_back(max_path[i]);
+                sub_path.push_back(max_path[next_valid]);
+                brute_force_fill_path(m, sub_path);
+            }
+            int i = max_path[k];
+            int j = max_path[next_valid];
+            int iu = v + k;
+            int ju = v + next_valid;
+            Face f;
+            f.vertex_index[0] = j;
+            f.vertex_index[1] = i;
+            f.vertex_index[2] = iu;
+            get_texture_with_edge(m, i, j, f.texture_index[1], f.texture_index[0]);
+            f.texture_index[2] = f.texture_index[1];
+            m.face.push_back(f);
+
+            f.vertex_index[0] = j;
+            f.vertex_index[1] = iu;
+            f.vertex_index[2] = ju;
+            get_texture_with_edge(m, i, j, f.texture_index[1], f.texture_index[2]);
+            f.texture_index[0] = f.texture_index[2];
+            m.face.push_back(f);
+        }
     m.update();
 }
 
@@ -784,35 +875,6 @@ int flood_fill_face_group(const Mesh& m, vector<int>& face_group) {
     return cur_group;
 }
 
-void fill_hole(Mesh& m, const vector<int>& path) {
-    if (path.size() <= 2)
-        return;
-    for (int i = 1 ; i < path.size() - 1; ++i) {
-        Face f;
-        f.vertex_index[0] = path[0];
-        f.vertex_index[1] = path[i];
-        f.vertex_index[2] = path[i+1];
-        get_texture_with_edge(m, path[0], path[1], f.texture_index[0], f.texture_index[1]);
-        get_texture_with_edge(m, path[i], path[i+1], f.texture_index[1], f.texture_index[2]);
-        m.face.push_back(f);
-    }
-}
-
-void fill_trivial_hole(Mesh& m, float threshold=0.02) {
-    int u = m.vertex.size();
-    vector<vector<int> > adj_vertex(u);
-    gen_border_graph(m, adj_vertex);
-    for (int i = 0; i < u; ++i)
-        for (int j = 0; j < adj_vertex[i].size(); ++j)
-            if (adj_vertex[i][j] != -1) {
-                vector<int> path;
-                euler_simple_circuit(path, adj_vertex, i);
-                if (path.size() < threshold * u) {
-                    fill_hole(m, path);
-                }
-            }
-}
-
 void mesh_offset(Mesh& m, float offset) {
     Mesh n;
     vector<bool> is_vertex_invalid(m.vertex.size(), false);
@@ -833,7 +895,8 @@ void mesh_offset(Mesh& m, float offset) {
     m.update();
 }
 
-void remove_face_by_plane(Mesh& m, const Plane& p) {
+void remove_face_by_y_plane(Mesh& m, float y) {
+    Plane p(0, 1, 0, -y);
     vector<bool> is_vertex_on_plane(m.vertex.size(), false);
     for (int i = 0; i < m.vertex.size(); ++i) {
         if (fabs(get_value_on_plane(m.vertex[i], p)) < EPS)
@@ -1165,61 +1228,19 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
     }
 }
 
-
 void brute_force_fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
-    Point3f bbox[2];
-    memcpy(bbox, m.bbox, sizeof(bbox));
     list<int> path;
     get_max_border_path_by_plane(m, p, path);
-    Point3f&& inner_orientation = get_orientation_vector_of_path_on_plane(m, path);
-    int last_size = path.size();
-    while (path.size() > 2) {
-        for (list<int>::iterator i = path.begin(); i != path.end(); ) {
-            list<int>::iterator j = prev<list<int> >(path, i);
-            list<int>::iterator k = next<list<int> >(path, i);
-            Point3f& u = m.vertex[*j];
-            Point3f& v = m.vertex[*i];
-            Point3f& w = m.vertex[*k];
-            // uvw is a valid triangle
-            // iff uvw < 180 degree
-            // and no other vertex on path lies inside uvw
-            // and uvw is a triangle
-            bool convex = cross_product(v - u, w - v) * inner_orientation > EPS;
-            if (!convex) {
-                ++i;
-                continue;
-            }
-            bool triangle = cross_product(u - v, w - v).length() > EPS;
-            if (!triangle) {
-                ++i;
-                continue;
-            }
-            bool inside = false;
-            for (list<int>::iterator p = path.begin(); p != path.end(); ++p)
-                if (p != i && p != j && p != k && is_inside_triangle(u, v, w, m.vertex[*p])) {
-                    inside = true;
-                    break;
-                }
-            if (inside) {
-                ++i;
-                continue;
-            }
-            m.face.push_back(Face(*i, *j, *k));
-            i = path.erase(i);
-        }
-        if (path.size() == last_size) {
-            cout << "Brute-force fill failed" << endl;
-            break;
-        }
-        last_size = path.size();
-    }
+    Point3f bbox[2];
+    memcpy(bbox, m.bbox, sizeof(bbox));
+    brute_force_fill_path(m, path);
     m.update();
     if (m.bbox[0].x[0] < bbox[0].x[0] - EPS ||
         m.bbox[0].x[1] < bbox[0].x[1] - EPS ||
         m.bbox[0].x[2] < bbox[0].x[2] - EPS ||
-        m.bbox[1].x[0] > bbox[0].x[0] + EPS ||
-        m.bbox[1].x[1] > bbox[0].x[1] + EPS ||
-        m.bbox[1].x[2] > bbox[0].x[2] + EPS) {
+        m.bbox[1].x[0] > bbox[1].x[0] + EPS ||
+        m.bbox[1].x[1] > bbox[1].x[1] + EPS ||
+        m.bbox[1].x[2] > bbox[1].x[2] + EPS) {
         cout << "Failed fill face" << endl;
         exit(EXIT_FAILURE);
     }
