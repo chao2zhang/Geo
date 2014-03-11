@@ -1216,6 +1216,7 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
     m.vertex = n.vertex;
     m.face.erase(m.face.begin() + f, m.face.end());
     m.face.insert(m.face.end(), n.face.begin(), n.face.end());
+    m.clean();
     m.update();
     if (m.bbox[0].x[0] < bbox[0].x[0] - EPS ||
         m.bbox[0].x[1] < bbox[0].x[1] - EPS ||
@@ -1223,7 +1224,6 @@ void fill_max_border_face_by_plane(Mesh& m, const Plane& p) {
         m.bbox[1].x[0] > bbox[1].x[0] + EPS ||
         m.bbox[1].x[1] > bbox[1].x[1] + EPS ||
         m.bbox[1].x[2] > bbox[1].x[2] + EPS) {
-        cout << "Failed fill face" << endl;
         exit(EXIT_FAILURE);
     }
 }
